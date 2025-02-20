@@ -15,6 +15,7 @@ services:
       - db
     environment:
       DATABASE_URL: "postgres://postgres:postgres@db/dev"
+      # dummy secret
       SECRET_KEY_BASE: "09wFngCQBx823enH6DyF5idFNJj1ggbyD+ebyj2bicPIsppr5QekFGnvfivY+5IU" 
     ports:
       - "4000:4000"
