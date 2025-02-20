@@ -1,0 +1,148 @@
+name: CI
+
+on:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  backend-build:
+    name: Backend build
+    runs-on: ubuntu-22.04
+
+    defaults:
+      run:
+        working-directory: backend/
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Elixir
+      uses: erlef/setup-elixir@v1
+      with:
+        elixir-version: '1.18.2'
+        otp-version: '27.2.2'
+      env:
+        ImageOS: ubuntu22
+        DATABASE_URL: "postgres://postgres:postgres@localhost/backend_test"
+
+    - name: Restore dependencies cache
+      uses: actions/cache@v4
+      with:
+        path: backend/deps
+        key: ${{ runner.os }}-mix-${{ hashFiles('backend/mix.lock') }}
+        restore-keys: ${{ runner.os }}-mix-
+
+    - name: Restore build cache
+      uses: actions/cache@v4
+      with:
+        path: backend/_build
+        key: ${{ runner.os }}-elixir-build-${{ hashFiles('backend/mix.exs', 'backend/mix.lock', 'backend/config/**/*', 'backend/lib/**/*') }}
+        restore-keys: ${{ runner.os }}-elixir-build-
+
+    - name: Install dependencies
+      run: MIX_ENV=test mix deps.get
+
+    - name: Compile
+      run: MIX_ENV=test mix deps.compile
+
+  backend-test:
+    name: Backend test 
+    runs-on: ubuntu-22.04
+    needs: backend-build
+
+    defaults:
+      run:
+        working-directory: backend/
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: backend_dev
+        ports:
+          - 5432:5432
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Elixir
+      uses: erlef/setup-elixir@v1
+      with:
+        elixir-version: '1.18.2'
+        otp-version: '27.2.2'
+      env:
+        ImageOS: ubuntu22
+        DATABASE_URL: "postgres://postgres:postgres@localhost/backend_test"
+
+    - name: Restore dependencies cache
+      uses: actions/cache@v4
+      with:
+        path: backend/deps
+        key: ${{ runner.os }}-mix-${{ hashFiles('backend/mix.lock') }}
+        restore-keys: ${{ runner.os }}-mix-
+
+    - name: Restore build cache
+      uses: actions/cache@v4
+      with:
+        path: backend/_build
+        key: ${{ runner.os }}-elixir-build-${{ hashFiles('backend/mix.exs', 'backend/mix.lock', 'backend/config/**/*', 'backend/lib/**/*') }}
+        restore-keys: ${{ runner.os }}-elixir-build-
+
+    - name: Run tests
+      run: mix test
+
+  frontend-build:
+    name: Frontend build
+    runs-on: ubuntu-22.04
+    
+    defaults:
+      run:
+        working-directory: frontend/
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        cache-dependency-path: frontend/package-lock.json
+        node-version: "21.1.0"
+        cache: 'npm'
+    - name: Restore dependencies cache 
+      uses: actions/cache@v4
+      with:
+        path: frontend/node_modules
+        key: ${{ runner.os }}-node-modules-${{ hashFiles('frontend/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-modules-
+    - run: npm ci
+    - run: npm run build
+
+  frontend-typecheck:
+    name: Frontend typecheck
+    runs-on: ubuntu-22.04
+    needs: frontend-build
+
+    defaults:
+      run:
+        working-directory: frontend/
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        cache-dependency-path: frontend/package-lock.json
+        node-version: "21.1.0"
+        cache: 'npm'
+    - name: Restore dependencies cache 
+      uses: actions/cache@v4
+      with:
+        path: frontend/node_modules
+        key: ${{ runner.os }}-node-modules-${{ hashFiles('frontend/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-modules-
+    - run: npm run typecheck
