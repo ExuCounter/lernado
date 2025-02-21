@@ -10,7 +10,7 @@ services:
       - "5432:5432"
 
   backend:
-    build: .
+    build: ./backend
     depends_on:
       - db
     environment:
@@ -20,12 +20,9 @@ services:
     ports:
       - "4000:4000"
 
-  # frontend:
-  #   build: .
-  #   depends_on:
-  #     - db
-  #   environment:
-  #     DATABASE_URL: "postgres://postgres:postgres@db/dev"
-  #     SECRET_KEY_BASE: "09wFngCQBx823enH6DyF5idFNJj1ggbyD+ebyj2bicPIsppr5QekFGnvfivY+5IU" 
-  #   ports:
-  #     - "4000:4000"
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
