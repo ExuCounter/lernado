@@ -28,14 +28,18 @@ name: Deploy to Amazon ECS
 
 on:
   push:
+    branches:
+      - release
 
 env:
   AWS_REGION: eu-north-1                             # set this to your preferred AWS region, e.g. us-west-1
-  ECR_REPOSITORY: dev/lernado                        # set this to your Amazon ECR repository name
+  BE_ECR_REPOSITORY: release/backend                        # set this to your Amazon ECR repository name
+  FE_ECR_REPOSITORY: release/frontend                        # set this to your Amazon ECR repository name
   ECS_SERVICE: platform-service                      # set this to your Amazon ECS service name
   ECS_CLUSTER: lernado                               # set this to your Amazon ECS clustr,name
   ECS_TASK_DEFINITION: .aws/task-definition.json     # set this to the path to your Amazon ECS task definition file, e.g. .aws/task-definition.json
-  CONTAINER_NAME: backend                            # set this to the name of the container
+  BE_CONTAINER_NAME: backend                             # set this to the name of the container
+  FE_CONTAINER_NAME: frontend                            # set this to the name of the container
 
 permissions:
   contents: read
@@ -61,31 +65,52 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
-    - name: Build, tag, and push image to Amazon ECR
-      id: build-image
+    - name: Build, tag, and push backend image to Amazon ECR
+      id: build-be-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        # Build a docker container and
+        # Build a backend docker container and
         # push it to ECR so that it can
         # be deployed to ECS.
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./backend/
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+        docker build -t $ECR_REGISTRY/$BE_ECR_REPOSITORY:$IMAGE_TAG ./backend/
+        docker push $ECR_REGISTRY/$BE_ECR_REPOSITORY:$IMAGE_TAG
+        echo "image=$ECR_REGISTRY/$BE_ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-    - name: Fill in the new image ID in the Amazon ECS task definition
-      id: task-def
+    - name: Build, tag, and push frontend image to Amazon ECR
+      id: build-fe-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        # Build a backend docker container and
+        # push it to ECR so that it can
+        # be deployed to ECS.
+        docker build -t $ECR_REGISTRY/$FE_ECR_REPOSITORY:$IMAGE_TAG ./frontend/
+        docker push $ECR_REGISTRY/$FE_ECR_REPOSITORY:$IMAGE_TAG
+        echo "image=$ECR_REGISTRY/$FE_ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+    - name: Fill in the new backend image ID in the Amazon ECS task definition
+      id: be-task-def
       uses: aws-actions/amazon-ecs-render-task-definition@v1
       with:
         task-definition: ${{ env.ECS_TASK_DEFINITION }}
-        container-name: ${{ env.CONTAINER_NAME }}
-        image: ${{ steps.build-image.outputs.image }}
+        container-name: ${{ env.BE_CONTAINER_NAME }}
+        image: ${{ steps.build-be-image.outputs.image }}
+
+    - name: Fill in the new frontend image ID in the Amazon ECS task definition
+      id: fe-task-def
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: ${{ steps.be-task-def.outputs.task-definition }}
+        container-name: ${{ env.FE_CONTAINER_NAME }}
+        image: ${{ steps.build-fe-image.outputs.image }}
 
     - name: Deploy Amazon ECS task definition
       uses: aws-actions/amazon-ecs-deploy-task-definition@v2
       with:
-        task-definition: ${{ steps.task-def.outputs.task-definition }}
+        task-definition: ${{ steps.fe-task-def.outputs.task-definition }}
         service: ${{ env.ECS_SERVICE }}
         cluster: ${{ env.ECS_CLUSTER }}
         wait-for-service-stability: true
