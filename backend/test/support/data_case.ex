@@ -24,6 +24,8 @@ defmodule Backend.DataCase do
       import Ecto.Changeset
       import Ecto.Query
       import Backend.DataCase
+
+      use SeedFactory.Test, schema: Backend.SeedFactorySchema
     end
   end
 
