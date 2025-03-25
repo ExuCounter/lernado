@@ -12,13 +12,20 @@ defmodule BackendWeb.Router do
 
   pipeline :api do
     plug(:accepts, ["json"])
+    plug(:fetch_session)
+    plug BackendWeb.Plugs.EnsureAuthenticated
   end
 
-  scope "/", BackendWeb do
-    pipe_through(:browser)
-
-    get("/", PageController, :home)
+  pipeline :auth do
+    plug(:accepts, ["html"])
+    plug(:fetch_session)
   end
+
+  # scope "/", BackendWeb do
+  #   pipe_through(:browser)
+
+  #   get("/", PageController, :home)
+  # end
 
   scope "/api", BackendWeb do
     pipe_through(:api)
@@ -26,10 +33,12 @@ defmodule BackendWeb.Router do
     get("/dummy/:id", APIController, :dummy)
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", BackendWeb do
-  #   pipe_through :api
-  # end
+  scope "/auth", BackendWeb do
+    pipe_through(:auth)
+
+    post("/login", AuthController, :login)
+    post("/register", AuthController, :register)
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:backend, :dev_routes) do

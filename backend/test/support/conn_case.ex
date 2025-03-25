@@ -28,6 +28,8 @@ defmodule BackendWeb.ConnCase do
       import Plug.Conn
       import Phoenix.ConnTest
       import BackendWeb.ConnCase
+
+      use SeedFactory.Test, schema: BackendWeb.SeedFactorySchema
     end
   end
 

@@ -60,7 +60,7 @@ defmodule Backend.MixProject do
       {:bandit, "~> 1.5"},
       {:argon2_elixir, "~> 4.0"},
       {:seed_factory, "~> 0.6", only: [:test, :dev]},
-      {:faker, "~> 0.18", only: :test}
+      {:faker, "~> 0.18", only: :test},
     ]
   end
 
