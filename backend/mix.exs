@@ -59,8 +59,8 @@ defmodule Backend.MixProject do
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.5"},
       {:argon2_elixir, "~> 4.0"},
-      {:seed_factory, "~> 0.6", only: [:test, :dev]},
-      {:faker, "~> 0.18", only: :test},
+      {:seed_factory, "~> 0.5", only: [:test, :dev]},
+      {:faker, "~> 0.18", only: :test}
     ]
   end
 

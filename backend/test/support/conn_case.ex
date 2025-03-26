@@ -35,6 +35,6 @@ defmodule BackendWeb.ConnCase do
 
   setup tags do
     Backend.DataCase.setup_sandbox(tags)
-    {:ok, conn: Phoenix.ConnTest.build_conn()}
+    {:ok, %{}}
   end
 end

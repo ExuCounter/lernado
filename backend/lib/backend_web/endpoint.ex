@@ -8,7 +8,9 @@ defmodule BackendWeb.Endpoint do
     store: :cookie,
     key: "_backend_key",
     signing_salt: "vrH2jxaB",
-    same_site: "Lax"
+    same_site: "Lax",
+    # 1 day
+    max_age: 60 * 60 * 24
   ]
 
   socket "/live", Phoenix.LiveView.Socket,

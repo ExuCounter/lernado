@@ -28,4 +28,8 @@ defmodule Backend.Users do
         end
     end
   end
+
+  def find_by_id(id) do
+    Backend.Repo.get_by(Backend.Users.Schema.User, id: id)
+  end
 end

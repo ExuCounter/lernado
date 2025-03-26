@@ -30,7 +30,9 @@ defmodule BackendWeb.Router do
   scope "/api", BackendWeb do
     pipe_through(:api)
 
-    get("/dummy/:id", APIController, :dummy)
+    scope "/users" do
+      put("/update/:id", UsersController, :update)
+    end
   end
 
   scope "/auth", BackendWeb do

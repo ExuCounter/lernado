@@ -6,7 +6,13 @@ defmodule BackendWeb.AuthController do
 
     case result do
       {:ok, user} ->
-        conn |> put_session(:current_user, user) |> put_status(201)
+        conn
+        |> put_session(:current_user, user)
+        |> put_status(201)
+        |> json(%{
+          message: "User logged in successfully.",
+          status: "success"
+        })
 
       {:error, message} ->
         conn
@@ -23,7 +29,13 @@ defmodule BackendWeb.AuthController do
 
     case result do
       {:ok, user} ->
-        conn |> put_session(:current_user, user) |> put_status(201)
+        conn
+        |> put_session(:current_user, user)
+        |> put_status(201)
+        |> json(%{
+          message: "User created successfully.",
+          status: "success"
+        })
 
       {:error, _changeset} ->
         conn
