@@ -46,5 +46,18 @@ defmodule Backend.Users.UsersTest do
              } =
                Jason.decode!(conn.resp_body)
     end
+
+    test "update different user", ctx do
+      ctx1 = ctx |> produce([:user, conn: [:user_session]])
+      ctx2 = ctx |> produce(:user)
+
+      conn = put(ctx1.conn, "/api/users/update/#{ctx2.user.id}", %{email: "newemail@gmail.com"})
+
+      assert %{
+               "status" => "error",
+               "message" => "You are not authorized to perform this action."
+             } =
+               Jason.decode!(conn.resp_body)
+    end
   end
 end

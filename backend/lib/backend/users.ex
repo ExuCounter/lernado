@@ -1,4 +1,6 @@
 defmodule Backend.Users do
+  defdelegate authorize(action, user, params), to: Backend.Users.Policy
+
   def create_user(attrs) do
     attrs
     |> Backend.Users.Schema.User.create_changeset()

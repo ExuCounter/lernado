@@ -21,7 +21,8 @@ defmodule BackendWeb.UsersController do
         status: "error"
       })
     else
-      with {:ok, user} <- Backend.Users.update_user(user, params) do
+      with {:ok, user} <- Backend.Users.update_user(user, params),
+           true <- Backend.Users.authorize(:update_user, conn.assigns.current_user, %{user: user}) do
         conn
         |> put_status(200)
         |> json(%{
@@ -30,6 +31,14 @@ defmodule BackendWeb.UsersController do
           status: "success"
         })
       else
+        false ->
+          conn
+          |> put_status(403)
+          |> json(%{
+            message: "You are not authorized to perform this action.",
+            status: "error"
+          })
+
         {:error, changeset} ->
           conn
           |> put_status(400)

@@ -61,7 +61,8 @@ defmodule Backend.MixProject do
       {:argon2_elixir, "~> 4.0"},
       {:seed_factory, "~> 0.5", only: [:test, :dev]},
       {:faker, "~> 0.18", only: :test},
-      {:ecto_enum, "~> 1.4"}
+      {:ecto_enum, "~> 1.4"},
+      {:bodyguard, "~> 2.4"}
     ]
   end
 

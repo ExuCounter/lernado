@@ -3,7 +3,7 @@ defmodule BackendWeb.AuthTest do
 
   describe "authentication" do
     test "signs in a user", ctx do
-      ctx = ctx |> produce([:user, conn: :unauthenticated])
+      ctx = ctx |> produce([:user, conn: [:unauthenticated]])
 
       conn =
         post(ctx.conn, "/auth/login", %{
@@ -15,7 +15,7 @@ defmodule BackendWeb.AuthTest do
     end
 
     test "signs in an unexisting user", ctx do
-      ctx = ctx |> produce(conn: :unauthenticated)
+      ctx = ctx |> produce(conn: [:unauthenticated])
 
       conn =
         post(ctx.conn, "/auth/login", %{
@@ -30,7 +30,7 @@ defmodule BackendWeb.AuthTest do
     end
 
     test "signs in an existing user with wrong password", ctx do
-      ctx = ctx |> produce([:user, conn: :unauthenticated])
+      ctx = ctx |> produce([:user, conn: [:unauthenticated]])
 
       conn =
         post(ctx.conn, "/auth/login", %{
@@ -45,7 +45,7 @@ defmodule BackendWeb.AuthTest do
     end
 
     test "register", ctx do
-      ctx = ctx |> produce(conn: :unauthenticated)
+      ctx = ctx |> produce(conn: [:unauthenticated])
 
       conn =
         post(ctx.conn, "/auth/register", %{
@@ -60,7 +60,7 @@ defmodule BackendWeb.AuthTest do
     end
 
     test "register with existing email", ctx do
-      ctx = ctx |> produce([:user, conn: :unauthenticated])
+      ctx = ctx |> produce([:user, conn: [:unauthenticated]])
 
       conn =
         post(ctx.conn, "/auth/register", %{

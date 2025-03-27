@@ -2,18 +2,15 @@ defmodule BackendWeb.AuthController do
   use BackendWeb, :controller
 
   def login(conn, %{"email" => email, "password" => password}) do
-    result = Backend.Users.verify_user(email, password)
-
-    case result do
-      {:ok, user} ->
-        conn
-        |> put_session(:current_user, user)
-        |> put_status(201)
-        |> json(%{
-          message: "User logged in successfully.",
-          status: "success"
-        })
-
+    with {:ok, user} <- Backend.Users.verify_user(email, password) do
+      conn
+      |> put_session(:current_user, user)
+      |> put_status(201)
+      |> json(%{
+        message: "User logged in successfully.",
+        status: "success"
+      })
+    else
       {:error, message} ->
         conn
         |> put_status(401)
@@ -25,18 +22,15 @@ defmodule BackendWeb.AuthController do
   end
 
   def register(conn, params) do
-    result = Backend.Users.create_user(params)
-
-    case result do
-      {:ok, user} ->
-        conn
-        |> put_session(:current_user, user)
-        |> put_status(201)
-        |> json(%{
-          message: "User created successfully.",
-          status: "success"
-        })
-
+    with {:ok, user} <- Backend.Users.create_user(params) do
+      conn
+      |> put_session(:current_user, user)
+      |> put_status(201)
+      |> json(%{
+        message: "User created successfully.",
+        status: "success"
+      })
+    else
       {:error, _changeset} ->
         conn
         |> put_status(400)
