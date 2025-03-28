@@ -14,21 +14,19 @@ defmodule BackendWeb.Controllers.UsersTest do
 
       conn = put(ctx.conn, "/api/users/update/#{ctx.user.id}", data)
 
-      assert conn.status == 200
-
       email = data["email"]
       first_name = data["first_name"]
       last_name = data["last_name"]
       preferred_currency = data["preferred_currency"]
 
       assert %{
-               "status" => "success",
-               "message" => "User updated successfully.",
-               "user" => %{
-                 "email" => ^email,
-                 "first_name" => ^first_name,
-                 "last_name" => ^last_name,
-                 "preferred_currency" => ^preferred_currency
+               "data" => %{
+                 "user" => %{
+                   "email" => ^email,
+                   "first_name" => ^first_name,
+                   "last_name" => ^last_name,
+                   "preferred_currency" => ^preferred_currency
+                 }
                }
              } =
                Jason.decode!(conn.resp_body)
@@ -40,11 +38,7 @@ defmodule BackendWeb.Controllers.UsersTest do
 
       conn = put(ctx1.conn, "/api/users/update/#{ctx1.user.id}", %{email: ctx2.user.email})
 
-      assert %{
-               "status" => "error",
-               "message" => %{"email" => ["has already been taken"]}
-             } =
-               Jason.decode!(conn.resp_body)
+      assert_bad_request_response(conn, %{"email" => ["has already been taken"]})
     end
 
     test "update different user", ctx do
@@ -53,11 +47,7 @@ defmodule BackendWeb.Controllers.UsersTest do
 
       conn = put(ctx1.conn, "/api/users/update/#{ctx2.user.id}", %{email: "newemail@gmail.com"})
 
-      assert %{
-               "status" => "error",
-               "message" => "You are not authorized to perform this action."
-             } =
-               Jason.decode!(conn.resp_body)
+      assert_forbidden_response(conn)
     end
   end
 end

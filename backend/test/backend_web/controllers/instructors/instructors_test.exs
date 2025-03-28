@@ -18,6 +18,35 @@ defmodule BackendWeb.Controllers.InstructorsTest do
       assert conn.status == 200
     end
 
+    test "update own project", ctx do
+      ctx = ctx |> produce([:user, :instructor, :instructor_project, conn: [:user_session]])
+
+      name = Faker.Company.name()
+
+      conn =
+        put(ctx.conn, "/api/instructors/projects/update/#{ctx.instructor_project.id}", %{
+          "name" => name
+        })
+
+      assert conn.status == 200
+
+      assert %{
+               "data" => %{
+                 "project" => %{
+                   "name" => ^name
+                 }
+               }
+             } =
+               Jason.decode!(conn.resp_body)
+
+      conn =
+        put(ctx.conn, "/api/instructors/projects/update/#{ctx.instructor_project.id}", %{
+          "name" => "short"
+        })
+
+      assert_bad_request_response(conn)
+    end
+
     test "update stranger project", ctx do
       ctx1 = ctx |> produce([:user, :instructor, :instructor_project])
       ctx2 = ctx |> produce([:user, :instructor, conn: [:user_session]])
@@ -27,13 +56,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           "name" => Faker.Company.name()
         })
 
-      assert conn.status == 403
-
-      assert %{
-               "status" => "error",
-               "message" => "You are not authorized to perform this action."
-             } =
-               Jason.decode!(conn.resp_body)
+      assert_forbidden_response(conn)
     end
   end
 end

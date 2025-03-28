@@ -11,7 +11,7 @@ defmodule BackendWeb.Controllers.AuthTest do
           "password" => ctx.user.password
         })
 
-      assert conn.status == 201
+      assert conn.status == 200
     end
 
     test "signs in an unexisting user", ctx do
@@ -23,10 +23,7 @@ defmodule BackendWeb.Controllers.AuthTest do
           "password" => Faker.String.base64()
         })
 
-      assert conn.status == 401
-
-      assert %{"status" => "error", "message" => "Invalid email or password"} =
-               Jason.decode!(conn.resp_body)
+      assert_unauthorized_response(conn, "Invalid email or password")
     end
 
     test "signs in an existing user with wrong password", ctx do
@@ -38,10 +35,7 @@ defmodule BackendWeb.Controllers.AuthTest do
           "password" => ctx.user.password <> "wrong"
         })
 
-      assert conn.status == 401
-
-      assert %{"status" => "error", "message" => "Invalid email or password"} =
-               Jason.decode!(conn.resp_body)
+      assert_unauthorized_response(conn, "Invalid email or password")
     end
 
     test "register", ctx do
@@ -56,7 +50,7 @@ defmodule BackendWeb.Controllers.AuthTest do
           "preferred_currency" => Faker.Currency.code()
         })
 
-      assert conn.status == 201
+      assert conn.status == 200
     end
 
     test "register with existing email", ctx do
@@ -68,10 +62,7 @@ defmodule BackendWeb.Controllers.AuthTest do
           "password" => ctx.user.password
         })
 
-      assert conn.status == 400
-
-      assert %{"status" => "error", "message" => "Something went wrong."} =
-               Jason.decode!(conn.resp_body)
+      assert_unauthorized_response(conn, "Unauthorized.")
     end
   end
 end

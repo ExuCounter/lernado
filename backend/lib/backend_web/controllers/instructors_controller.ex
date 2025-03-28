@@ -5,28 +5,13 @@ defmodule BackendWeb.InstructorsController do
     with true <- Backend.Instructors.authorize(:create_instructor, conn.assigns.current_user),
          {:ok, _instructor} <-
            Backend.Instructors.create_instructor(conn.assigns.current_user, params) do
-      conn
-      |> put_status(200)
-      |> json(%{
-        message: "Instructor created successfully.",
-        status: "success"
-      })
+      conn |> successful_response()
     else
       false ->
-        conn
-        |> put_status(403)
-        |> json(%{
-          message: "You are not authorized to perform this action.",
-          status: "error"
-        })
+        conn |> forbidden_response()
 
       {:error, _changeset} ->
-        conn
-        |> put_status(400)
-        |> json(%{
-          message: "Something went wrong.",
-          status: "error"
-        })
+        conn |> bad_request_response()
     end
   end
 
@@ -36,29 +21,13 @@ defmodule BackendWeb.InstructorsController do
 
     with true <- Backend.Instructors.authorize(:create_project, user),
          {:ok, project} <- Backend.Instructors.create_project(instructor, params) do
-      conn
-      |> put_status(200)
-      |> json(%{
-        project: project,
-        message: "Project created successfully.",
-        status: "success"
-      })
+      conn |> successful_response(%{project: project})
     else
       false ->
-        conn
-        |> put_status(403)
-        |> json(%{
-          message: "You are not authorized to perform this action.",
-          status: "error"
-        })
+        conn |> forbidden_response()
 
       {:error, _changeset} ->
-        conn
-        |> put_status(400)
-        |> json(%{
-          message: "Something went wrong.",
-          status: "error"
-        })
+        conn |> bad_request_response()
     end
   end
 
@@ -75,42 +44,20 @@ defmodule BackendWeb.InstructorsController do
     project = Backend.Instructors.find_project_by_id(params["id"])
 
     if is_nil(project) do
-      conn
-      |> put_status(404)
-      |> json(%{
-        message: "Project not found.",
-        status: "error"
-      })
+      conn |> not_found_response()
     else
       with true <-
              Backend.Instructors.authorize(:update_project, conn.assigns.current_user, %{
                project: project
              }),
-           {:ok, project} <-
-             Backend.Instructors.update_project(project, params) do
-        conn
-        |> put_status(200)
-        |> json(%{
-          project: project,
-          message: "Project updated successfully.",
-          status: "success"
-        })
+           {:ok, project} <- Backend.Instructors.update_project(project, params) do
+        conn |> successful_response(%{project: project})
       else
         false ->
-          conn
-          |> put_status(403)
-          |> json(%{
-            message: "You are not authorized to perform this action.",
-            status: "error"
-          })
+          conn |> forbidden_response()
 
         {:error, _changeset} ->
-          conn
-          |> put_status(400)
-          |> json(%{
-            message: "Something went wrong.",
-            status: "error"
-          })
+          conn |> bad_request_response()
       end
     end
   end

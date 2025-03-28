@@ -30,6 +30,8 @@ defmodule BackendWeb.ConnCase do
       import BackendWeb.ConnCase
 
       use SeedFactory.Test, schema: BackendWeb.SeedFactorySchema
+
+      import BackendWeb.ResponseHelpers
     end
   end
 

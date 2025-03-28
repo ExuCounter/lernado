@@ -5,19 +5,10 @@ defmodule BackendWeb.AuthController do
     with {:ok, user} <- Backend.Users.verify_user(email, password) do
       conn
       |> put_session(:current_user, user)
-      |> put_status(201)
-      |> json(%{
-        message: "User logged in successfully.",
-        status: "success"
-      })
+      |> successful_response()
     else
       {:error, message} ->
-        conn
-        |> put_status(401)
-        |> json(%{
-          message: message,
-          status: "error"
-        })
+        conn |> unauthorized_response(message)
     end
   end
 
@@ -25,19 +16,10 @@ defmodule BackendWeb.AuthController do
     with {:ok, user} <- Backend.Users.create_user(params) do
       conn
       |> put_session(:current_user, user)
-      |> put_status(201)
-      |> json(%{
-        message: "User created successfully.",
-        status: "success"
-      })
+      |> successful_response()
     else
       {:error, _changeset} ->
-        conn
-        |> put_status(400)
-        |> json(%{
-          message: "Something went wrong.",
-          status: "error"
-        })
+        conn |> unauthorized_response()
     end
   end
 end
