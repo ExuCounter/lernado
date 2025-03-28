@@ -1,4 +1,4 @@
-defmodule Backend.Users.UsersTest do
+defmodule BackendWeb.Controllers.UsersTest do
   use BackendWeb.ConnCase, async: true
 
   describe "users" do

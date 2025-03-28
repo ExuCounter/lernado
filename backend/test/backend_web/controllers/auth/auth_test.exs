@@ -1,4 +1,4 @@
-defmodule BackendWeb.AuthTest do
+defmodule BackendWeb.Controllers.AuthTest do
   use BackendWeb.ConnCase, async: true
 
   describe "authentication" do

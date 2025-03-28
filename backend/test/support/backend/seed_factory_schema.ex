@@ -16,4 +16,30 @@ defmodule Backend.SeedFactorySchema do
 
     produce(:user)
   end
+
+  command :create_instructor do
+    param(:user, entity: :user)
+
+    resolve(fn args ->
+      with {:ok, instructor} <- args.user |> Backend.Instructors.create_instructor(args) do
+        {:ok, %{instructor: instructor}}
+      end
+    end)
+
+    produce(:instructor)
+  end
+
+  command :create_instructor_project do
+    param(:user, entity: :user)
+    param(:instructor, entity: :instructor)
+    param(:name, generate: &Faker.Lorem.sentence/0)
+
+    resolve(fn args ->
+      with {:ok, project} <- args.instructor |> Backend.Instructors.create_project(args) do
+        {:ok, %{instructor_project: project}}
+      end
+    end)
+
+    produce(:instructor_project)
+  end
 end

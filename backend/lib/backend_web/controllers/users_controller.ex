@@ -21,8 +21,9 @@ defmodule BackendWeb.UsersController do
         status: "error"
       })
     else
-      with {:ok, user} <- Backend.Users.update_user(user, params),
-           true <- Backend.Users.authorize(:update_user, conn.assigns.current_user, %{user: user}) do
+      with true <-
+             Backend.Users.authorize(:update_user, conn.assigns.current_user, %{user: user}),
+           {:ok, user} <- Backend.Users.update_user(user, params) do
         conn
         |> put_status(200)
         |> json(%{

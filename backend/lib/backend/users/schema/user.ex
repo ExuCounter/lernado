@@ -21,6 +21,8 @@ defmodule Backend.Users.Schema.User do
     field :password_hash, :string
     field :preferred_currency, :string
 
+    has_one :instructor, Backend.Instructors.Schema.Instructor
+
     timestamps()
   end
 

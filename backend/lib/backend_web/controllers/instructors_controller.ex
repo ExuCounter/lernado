@@ -2,16 +2,22 @@ defmodule BackendWeb.InstructorsController do
   use BackendWeb, :controller
 
   def create_instructor(conn, params) do
-    result = Backend.Instructors.create_instructor(params)
-
-    case result do
-      {:ok, instructor} ->
+    with true <- Backend.Instructors.authorize(:create_instructor, conn.assigns.current_user),
+         {:ok, _instructor} <-
+           Backend.Instructors.create_instructor(conn.assigns.current_user, params) do
+      conn
+      |> put_status(200)
+      |> json(%{
+        message: "Instructor created successfully.",
+        status: "success"
+      })
+    else
+      false ->
         conn
-        |> put_status(201)
+        |> put_status(403)
         |> json(%{
-          instructor: instructor,
-          message: "Instructor created successfully.",
-          status: "success"
+          message: "You are not authorized to perform this action.",
+          status: "error"
         })
 
       {:error, _changeset} ->
@@ -25,16 +31,25 @@ defmodule BackendWeb.InstructorsController do
   end
 
   def create_project(conn, params) do
-    result = Backend.Instructors.create_project(params)
+    %{instructor: instructor} =
+      user = Backend.Repo.preload(conn.assigns.current_user, :instructor)
 
-    case result do
-      {:ok, project} ->
+    with true <- Backend.Instructors.authorize(:create_project, user),
+         {:ok, project} <- Backend.Instructors.create_project(instructor, params) do
+      conn
+      |> put_status(200)
+      |> json(%{
+        project: project,
+        message: "Project created successfully.",
+        status: "success"
+      })
+    else
+      false ->
         conn
-        |> put_status(201)
+        |> put_status(403)
         |> json(%{
-          project: project,
-          message: "Project created successfully.",
-          status: "success"
+          message: "You are not authorized to perform this action.",
+          status: "error"
         })
 
       {:error, _changeset} ->
@@ -67,82 +82,26 @@ defmodule BackendWeb.InstructorsController do
         status: "error"
       })
     else
-      result = Backend.Instructors.update_project(project, params)
-
-      case result do
-        {:ok, project} ->
-          conn
-          |> put_status(200)
-          |> json(%{
-            project: project,
-            message: "Project updated successfully.",
-            status: "success"
-          })
-
-        {:error, _changeset} ->
-          conn
-          |> put_status(400)
-          |> json(%{
-            message: "Something went wrong.",
-            status: "error"
-          })
-      end
-    end
-  end
-
-  def create_course(conn, params) do
-    result = Backend.Instructors.create_course(params)
-
-    case result do
-      {:ok, course} ->
+      with true <-
+             Backend.Instructors.authorize(:update_project, conn.assigns.current_user, %{
+               project: project
+             }),
+           {:ok, project} <-
+             Backend.Instructors.update_project(project, params) do
         conn
-        |> put_status(201)
+        |> put_status(200)
         |> json(%{
-          course: course,
-          message: "Course created successfully.",
+          project: project,
+          message: "Project updated successfully.",
           status: "success"
         })
-
-      {:error, _changeset} ->
-        conn
-        |> put_status(400)
-        |> json(%{
-          message: "Something went wrong.",
-          status: "error"
-        })
-    end
-  end
-
-  def update_course(conn, %{"id" => nil}) do
-    conn
-    |> put_status(400)
-    |> json(%{
-      message: "Course ID is required.",
-      status: "error"
-    })
-  end
-
-  def update_course(conn, params) do
-    course = Backend.Instructors.find_course_by_id(params["id"])
-
-    if is_nil(course) do
-      conn
-      |> put_status(404)
-      |> json(%{
-        message: "Course not found.",
-        status: "error"
-      })
-    else
-      result = Backend.Instructors.update_course(course, params)
-
-      case result do
-        {:ok, course} ->
+      else
+        false ->
           conn
-          |> put_status(200)
+          |> put_status(403)
           |> json(%{
-            course: course,
-            message: "Course updated successfully.",
-            status: "success"
+            message: "You are not authorized to perform this action.",
+            status: "error"
           })
 
         {:error, _changeset} ->
@@ -155,4 +114,70 @@ defmodule BackendWeb.InstructorsController do
       end
     end
   end
+
+  #   def create_course(conn, params) do
+  #     result = Backend.Instructors.create_course(params)
+
+  #     case result do
+  #       {:ok, course} ->
+  #         conn
+  #         |> put_status(201)
+  #         |> json(%{
+  #           course: course,
+  #           message: "Course created successfully.",
+  #           status: "success"
+  #         })
+
+  #       {:error, _changeset} ->
+  #         conn
+  #         |> put_status(400)
+  #         |> json(%{
+  #           message: "Something went wrong.",
+  #           status: "error"
+  #         })
+  #     end
+  #   end
+
+  #   def update_course(conn, %{"id" => nil}) do
+  #     conn
+  #     |> put_status(400)
+  #     |> json(%{
+  #       message: "Course ID is required.",
+  #       status: "error"
+  #     })
+  #   end
+
+  #   def update_course(conn, params) do
+  #     course = Backend.Instructors.find_course_by_id(params["id"])
+
+  #     if is_nil(course) do
+  #       conn
+  #       |> put_status(404)
+  #       |> json(%{
+  #         message: "Course not found.",
+  #         status: "error"
+  #       })
+  #     else
+  #       result = Backend.Instructors.update_course(course, params)
+
+  #       case result do
+  #         {:ok, course} ->
+  #           conn
+  #           |> put_status(200)
+  #           |> json(%{
+  #             course: course,
+  #             message: "Course updated successfully.",
+  #             status: "success"
+  #           })
+
+  #         {:error, _changeset} ->
+  #           conn
+  #           |> put_status(400)
+  #           |> json(%{
+  #             message: "Something went wrong.",
+  #             status: "error"
+  #           })
+  #       end
+  #     end
+  #   end
 end

@@ -33,6 +33,15 @@ defmodule BackendWeb.Router do
     scope "/users" do
       put("/update/:id", UsersController, :update)
     end
+
+    scope "/instructors" do
+      put("/create", InstructorsController, :create_instructor)
+
+      scope "/projects" do
+        put("/create", InstructorsController, :create_project)
+        put("/update/:id", InstructorsController, :update_project)
+      end
+    end
   end
 
   scope "/auth", BackendWeb do

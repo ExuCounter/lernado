@@ -11,13 +11,15 @@ defmodule Backend.Instructors.Schema.Course do
     field :price, :float
     field :currency, :string
 
-    belongs_to :project, Backend.Instructors.Schema.Project
+    belongs_to :project, Backend.Instructors.Schema.Project, type: :binary_id
 
     timestamps()
   end
 
-  def create_changeset(attrs) do
-    %__MODULE__{}
+  def create_changeset(project, attrs) do
+    %__MODULE__{
+      project_id: project.id
+    }
     |> cast(attrs, [:name, :description, :status, :price, :currency, :project_id])
     |> validate_required([:name, :description, :status, :price, :currency, :project_id])
     |> unique_constraint(:name)

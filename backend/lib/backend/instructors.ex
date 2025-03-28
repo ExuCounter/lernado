@@ -1,18 +1,25 @@
 defmodule Backend.Instructors do
-  def create_instructor(attrs) do
-    Backend.Instructors.Schema.Instructor.create_changeset(attrs) |> Backend.Repo.insert()
+  defdelegate authorize(action, user, params), to: Backend.Instructors.Policy
+  defdelegate authorize(action, user), to: Backend.Instructors.Policy
+
+  def create_instructor(user, attrs) do
+    user |> Backend.Instructors.Schema.Instructor.create_changeset(attrs) |> Backend.Repo.insert()
   end
 
-  def create_project(attrs) do
-    Backend.Instructors.Schema.Project.create_changeset(attrs) |> Backend.Repo.insert()
+  def create_project(instructor, attrs) do
+    instructor
+    |> Backend.Instructors.Schema.Project.create_changeset(attrs)
+    |> Backend.Repo.insert()
   end
 
   def update_project(project, attrs) do
-    project |> Backend.Instructors.Schema.Project.update_changeset(attrs) |> Backend.Repo.update()
+    project
+    |> Backend.Instructors.Schema.Project.update_changeset(attrs)
+    |> Backend.Repo.update()
   end
 
-  def create_course(attrs) do
-    Backend.Instructors.Schema.Course.create_changeset(attrs) |> Backend.Repo.insert()
+  def create_course(project, attrs) do
+    project |> Backend.Instructors.Schema.Course.create_changeset(attrs) |> Backend.Repo.insert()
   end
 
   def update_course(course, attrs) do
