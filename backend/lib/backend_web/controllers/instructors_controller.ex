@@ -32,12 +32,7 @@ defmodule BackendWeb.InstructorsController do
   end
 
   def update_project(conn, %{"id" => nil}) do
-    conn
-    |> put_status(400)
-    |> json(%{
-      message: "Project ID is required.",
-      status: "error"
-    })
+    conn |> bad_request_response("Project ID is required.")
   end
 
   def update_project(conn, params) do
