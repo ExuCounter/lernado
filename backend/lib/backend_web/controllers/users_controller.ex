@@ -6,7 +6,7 @@ defmodule BackendWeb.UsersController do
   end
 
   def find(conn, params) do
-    user = Backend.Users.find_by_id(params["id"])
+    user = Backend.Users.find_by_id(params["user_id"])
 
     if is_nil(user) do
       conn |> not_found_response()
@@ -20,7 +20,7 @@ defmodule BackendWeb.UsersController do
   end
 
   def update(conn, params) do
-    user = Backend.Users.find_by_id(params["id"])
+    user = Backend.Users.find_by_id(params["user_id"])
 
     if is_nil(user) do
       conn |> not_found_response()
@@ -34,12 +34,7 @@ defmodule BackendWeb.UsersController do
           conn |> forbidden_response()
 
         {:error, changeset} ->
-          message =
-            Ecto.Changeset.traverse_errors(changeset, fn {msg, _opts} ->
-              Phoenix.HTML.Safe.to_iodata(msg) |> IO.iodata_to_binary()
-            end)
-
-          conn |> bad_request_response(message)
+          conn |> failed_changeset_response(changeset)
       end
     end
   end

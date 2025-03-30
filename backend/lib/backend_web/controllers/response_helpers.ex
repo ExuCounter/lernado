@@ -40,6 +40,17 @@ defmodule BackendWeb.ResponseHelpers do
     })
   end
 
+  def failed_changeset_response(conn, changeset) do
+    message =
+      Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+        Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
+          opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+        end)
+      end)
+
+    conn |> bad_request_response(message)
+  end
+
   def unauthorized_response(conn, message \\ @unauthorized_message) do
     conn
     |> put_status(401)

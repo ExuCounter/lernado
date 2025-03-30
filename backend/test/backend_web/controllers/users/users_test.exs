@@ -9,10 +9,11 @@ defmodule BackendWeb.Controllers.UsersTest do
         "email" => ctx.user.email,
         "first_name" => Faker.Person.first_name(),
         "last_name" => Faker.Person.last_name(),
-        "preferred_currency" => Faker.Currency.code()
+        "preferred_currency" => Faker.Currency.code(),
+        "user_id" => ctx.user.id
       }
 
-      conn = put(ctx.conn, "/api/users/update/#{ctx.user.id}", data)
+      conn = put(ctx.conn, "/api/users/update", data)
 
       email = data["email"]
       first_name = data["first_name"]
@@ -36,7 +37,7 @@ defmodule BackendWeb.Controllers.UsersTest do
       ctx1 = ctx |> produce([:user, conn: [:user_session]])
       ctx2 = ctx |> produce(:user)
 
-      conn = put(ctx1.conn, "/api/users/update/#{ctx1.user.id}", %{email: ctx2.user.email})
+      conn = put(ctx1.conn, "/api/users/update", %{email: ctx2.user.email, user_id: ctx1.user.id})
 
       assert_bad_request_response(conn, %{"email" => ["has already been taken"]})
     end
@@ -45,7 +46,8 @@ defmodule BackendWeb.Controllers.UsersTest do
       ctx1 = ctx |> produce([:user, conn: [:user_session]])
       ctx2 = ctx |> produce(:user)
 
-      conn = put(ctx1.conn, "/api/users/update/#{ctx2.user.id}", %{email: "newemail@gmail.com"})
+      conn =
+        put(ctx1.conn, "/api/users/update", %{email: "newemail@gmail.com", user_id: ctx2.user.id})
 
       assert_forbidden_response(conn)
     end

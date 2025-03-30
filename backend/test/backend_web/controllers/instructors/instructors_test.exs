@@ -8,14 +8,24 @@ defmodule BackendWeb.Controllers.InstructorsTest do
       conn = put(ctx.conn, "/api/instructors/create", %{})
 
       assert conn.status == 200
+
+      conn = put(ctx.conn, "/api/instructors/create", %{})
+
+      assert_bad_request_response(conn, %{"user_id" => ["has already been taken"]})
     end
 
     test "create instructor project", ctx do
       ctx = ctx |> produce([:user, :instructor, conn: [:user_session]])
 
-      conn = put(ctx.conn, "/api/instructors/projects/create", %{"name" => Faker.Company.name()})
+      name = Faker.Company.name()
+
+      conn = put(ctx.conn, "/api/instructors/projects/create", %{"name" => name})
 
       assert conn.status == 200
+
+      conn = put(ctx.conn, "/api/instructors/projects/create", %{"name" => name})
+
+      assert_bad_request_response(conn, %{"name" => ["has already been taken"]})
     end
 
     test "update own project", ctx do
@@ -24,7 +34,8 @@ defmodule BackendWeb.Controllers.InstructorsTest do
       name = Faker.Company.name()
 
       conn =
-        put(ctx.conn, "/api/instructors/projects/update/#{ctx.instructor_project.id}", %{
+        put(ctx.conn, "/api/instructors/projects/update", %{
+          "project_id" => ctx.instructor_project.id,
           "name" => name
         })
 
@@ -40,11 +51,12 @@ defmodule BackendWeb.Controllers.InstructorsTest do
                Jason.decode!(conn.resp_body)
 
       conn =
-        put(ctx.conn, "/api/instructors/projects/update/#{ctx.instructor_project.id}", %{
+        put(ctx.conn, "/api/instructors/projects/update", %{
+          "project_id" => ctx.instructor_project.id,
           "name" => "short"
         })
 
-      assert_bad_request_response(conn)
+      assert_bad_request_response(conn, %{"name" => ["should be at least 6 character(s)"]})
     end
 
     test "update stranger project", ctx do
@@ -52,7 +64,58 @@ defmodule BackendWeb.Controllers.InstructorsTest do
       ctx2 = ctx |> produce([:user, :instructor, conn: [:user_session]])
 
       conn =
-        put(ctx2.conn, "/api/instructors/projects/update/#{ctx1.instructor_project.id}", %{
+        put(ctx2.conn, "/api/instructors/projects/update", %{
+          "name" => Faker.Company.name(),
+          "project_id" => ctx1.instructor_project.id
+        })
+
+      assert_forbidden_response(conn)
+    end
+
+    test "create course", ctx do
+      ctx = ctx |> produce([:user, :instructor, :instructor_project, conn: [:user_session]])
+
+      name = Faker.Company.name()
+      project_id = ctx.instructor_project.id
+
+      conn =
+        put(ctx.conn, "/api/instructors/projects/courses/create", %{
+          "project_id" => project_id,
+          "name" => name
+        })
+
+      assert_successfull_response(conn)
+
+      assert %{
+               "data" => %{
+                 "course" => %{
+                   "name" => ^name,
+                   "project" => %{"id" => ^project_id},
+                   "price" => +0.0,
+                   "currency" => "USD",
+                   "description" => "",
+                   "status" => "draft"
+                 }
+               }
+             } =
+               Jason.decode!(conn.resp_body)
+
+      conn =
+        put(ctx.conn, "/api/instructors/projects/courses/create", %{
+          "name" => name,
+          "project_id" => ctx.instructor_project.id
+        })
+
+      assert_bad_request_response(conn, %{"name" => ["has already been taken"]})
+    end
+
+    test "update stanger course", ctx do
+      ctx1 = ctx |> produce([:user, :instructor, :instructor_project, :instructor_course])
+      ctx2 = ctx |> produce([:user, conn: [:user_session]])
+
+      conn =
+        put(ctx2.conn, "/api/instructors/projects/courses/update", %{
+          "course_id" => ctx1.instructor_course.id,
           "name" => Faker.Company.name()
         })
 

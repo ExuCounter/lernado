@@ -12,8 +12,8 @@ defmodule BackendWeb.InstructorsController do
       false ->
         conn |> forbidden_response()
 
-      {:error, _changeset} ->
-        conn |> bad_request_response()
+      {:error, changeset} ->
+        conn |> failed_changeset_response(changeset)
     end
   end
 
@@ -28,17 +28,17 @@ defmodule BackendWeb.InstructorsController do
       false ->
         conn |> forbidden_response()
 
-      {:error, _changeset} ->
-        conn |> bad_request_response()
+      {:error, changeset} ->
+        conn |> failed_changeset_response(changeset)
     end
   end
 
-  def update_project(conn, %{"id" => nil}) do
+  def update_project(conn, %{"project_id" => nil}) do
     conn |> bad_request_response("Project ID is required.")
   end
 
   def update_project(conn, params) do
-    project = Backend.Instructors.find_project_by_id(params["id"])
+    project = Backend.Instructors.find_project_by_id(params["project_id"])
 
     if is_nil(project) do
       conn |> not_found_response()
@@ -53,75 +53,56 @@ defmodule BackendWeb.InstructorsController do
         false ->
           conn |> forbidden_response()
 
-        {:error, _changeset} ->
-          conn |> bad_request_response()
+        {:error, changeset} ->
+          conn |> failed_changeset_response(changeset)
       end
     end
   end
 
-  #   def create_course(conn, params) do
-  #     result = Backend.Instructors.create_course(params)
+  def create_course(conn, params) do
+    project = Backend.Instructors.find_project_by_id(params["project_id"])
 
-  #     case result do
-  #       {:ok, course} ->
-  #         conn
-  #         |> put_status(201)
-  #         |> json(%{
-  #           course: course,
-  #           message: "Course created successfully.",
-  #           status: "success"
-  #         })
+    with true <-
+           Backend.Instructors.authorize(:create_course, conn.assigns.current_user, %{
+             project: project
+           }),
+         {:ok, course} <- Backend.Instructors.create_course(project, params) do
+      course = Backend.Repo.preload(course, :project)
+      conn |> successful_response(%{course: course})
+    else
+      false ->
+        conn |> forbidden_response()
 
-  #       {:error, _changeset} ->
-  #         conn
-  #         |> put_status(400)
-  #         |> json(%{
-  #           message: "Something went wrong.",
-  #           status: "error"
-  #         })
-  #     end
-  #   end
+      {:error, changeset} ->
+        conn |> failed_changeset_response(changeset)
+    end
+  end
 
-  #   def update_course(conn, %{"id" => nil}) do
-  #     conn
-  #     |> put_status(400)
-  #     |> json(%{
-  #       message: "Course ID is required.",
-  #       status: "error"
-  #     })
-  #   end
+  def update_course(conn, %{"course_id" => nil}) do
+    conn |> bad_request_response("Course ID is required.")
+  end
 
-  #   def update_course(conn, params) do
-  #     course = Backend.Instructors.find_course_by_id(params["id"])
+  def update_course(conn, params) do
+    course = Backend.Instructors.find_course_by_id(params["course_id"])
 
-  #     if is_nil(course) do
-  #       conn
-  #       |> put_status(404)
-  #       |> json(%{
-  #         message: "Course not found.",
-  #         status: "error"
-  #       })
-  #     else
-  #       result = Backend.Instructors.update_course(course, params)
+    if is_nil(course) do
+      conn |> not_found_response()
+    else
+      with true <-
+             Backend.Instructors.authorize(:update_course, conn.assigns.current_user, %{
+               course: course
+             }),
+           {:ok, course} <- Backend.Instructors.update_course(course, params) do
+        course = Backend.Repo.preload(course, :project)
 
-  #       case result do
-  #         {:ok, course} ->
-  #           conn
-  #           |> put_status(200)
-  #           |> json(%{
-  #             course: course,
-  #             message: "Course updated successfully.",
-  #             status: "success"
-  #           })
+        conn |> successful_response(%{course: course})
+      else
+        false ->
+          conn |> forbidden_response()
 
-  #         {:error, _changeset} ->
-  #           conn
-  #           |> put_status(400)
-  #           |> json(%{
-  #             message: "Something went wrong.",
-  #             status: "error"
-  #           })
-  #       end
-  #     end
-  #   end
+        {:error, changeset} ->
+          conn |> failed_changeset_response(changeset)
+      end
+    end
+  end
 end

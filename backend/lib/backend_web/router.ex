@@ -31,8 +31,8 @@ defmodule BackendWeb.Router do
     pipe_through(:api)
 
     scope "/users" do
-      put("/update/:id", UsersController, :update)
-      get("/:id", UsersController, :find)
+      put("/update", UsersController, :update)
+      get("/:user_id", UsersController, :find)
     end
 
     scope "/instructors" do
@@ -40,7 +40,12 @@ defmodule BackendWeb.Router do
 
       scope "/projects" do
         put("/create", InstructorsController, :create_project)
-        put("/update/:id", InstructorsController, :update_project)
+        put("/update", InstructorsController, :update_project)
+
+        scope "/courses" do
+          put("/create", InstructorsController, :create_course)
+          put("/update", InstructorsController, :update_course)
+        end
       end
     end
   end
