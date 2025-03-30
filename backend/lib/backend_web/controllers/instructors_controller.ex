@@ -3,9 +3,11 @@ defmodule BackendWeb.InstructorsController do
 
   def create_instructor(conn, params) do
     with true <- Backend.Instructors.authorize(:create_instructor, conn.assigns.current_user),
-         {:ok, _instructor} <-
+         {:ok, instructor} <-
            Backend.Instructors.create_instructor(conn.assigns.current_user, params) do
-      conn |> successful_response()
+      instructor = Backend.Repo.preload(instructor, :user)
+
+      conn |> successful_response(%{instructor: instructor})
     else
       false ->
         conn |> forbidden_response()

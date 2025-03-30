@@ -1,6 +1,20 @@
 defmodule BackendWeb.UsersController do
   use BackendWeb, :controller
 
+  def find(conn, %{"id" => nil}) do
+    conn |> not_found_response()
+  end
+
+  def find(conn, params) do
+    user = Backend.Users.find_by_id(params["id"])
+
+    if is_nil(user) do
+      conn |> not_found_response()
+    else
+      conn |> successful_response(%{user: user})
+    end
+  end
+
   def update(conn, %{"id" => nil}) do
     conn |> not_found_response()
   end

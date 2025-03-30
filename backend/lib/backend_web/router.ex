@@ -32,6 +32,7 @@ defmodule BackendWeb.Router do
 
     scope "/users" do
       put("/update/:id", UsersController, :update)
+      get("/:id", UsersController, :find)
     end
 
     scope "/instructors" do

@@ -11,7 +11,14 @@ defmodule BackendWeb.Controllers.AuthTest do
           "password" => ctx.user.password
         })
 
-      assert conn.status == 200
+      assert_successfull_response(conn)
+
+      assert %{
+               "data" => %{
+                 "user" => _
+               }
+             } =
+               Jason.decode!(conn.resp_body)
     end
 
     test "signs in an unexisting user", ctx do
@@ -50,7 +57,14 @@ defmodule BackendWeb.Controllers.AuthTest do
           "preferred_currency" => Faker.Currency.code()
         })
 
-      assert conn.status == 200
+      assert_successfull_response(conn)
+
+      assert %{
+               "data" => %{
+                 "user" => _
+               }
+             } =
+               Jason.decode!(conn.resp_body)
     end
 
     test "register with existing email", ctx do

@@ -5,7 +5,7 @@ defmodule BackendWeb.AuthController do
     with {:ok, user} <- Backend.Users.verify_user(email, password) do
       conn
       |> put_session(:current_user, user)
-      |> successful_response()
+      |> successful_response(%{user: user})
     else
       {:error, message} ->
         conn |> unauthorized_response(message)
@@ -16,7 +16,7 @@ defmodule BackendWeb.AuthController do
     with {:ok, user} <- Backend.Users.create_user(params) do
       conn
       |> put_session(:current_user, user)
-      |> successful_response()
+      |> successful_response(%{user: user})
     else
       {:error, _changeset} ->
         conn |> unauthorized_response()

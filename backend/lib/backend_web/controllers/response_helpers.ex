@@ -83,4 +83,8 @@ defmodule BackendWeb.ResponseHelpers do
            } =
              Jason.decode!(conn.resp_body)
   end
+
+  def assert_successfull_response(conn) do
+    assert conn.status == 200
+  end
 end
