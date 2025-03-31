@@ -28,6 +28,18 @@ defmodule Backend.Instructors do
     |> Backend.Repo.update()
   end
 
+  def create_course_module(course, attrs) do
+    course
+    |> Backend.Instructors.Schema.Course.Module.create_changeset(attrs)
+    |> Backend.Repo.insert()
+  end
+
+  def update_course_module(module, attrs) do
+    module
+    |> Backend.Instructors.Schema.Course.Module.update_changeset(attrs)
+    |> Backend.Repo.insert()
+  end
+
   def find_instructor_by_id(id) do
     Backend.Repo.get_by(Backend.Instructors.Schema.Instructor, id: id)
   end
@@ -38,5 +50,9 @@ defmodule Backend.Instructors do
 
   def find_course_by_id(id) do
     Backend.Repo.get_by(Backend.Instructors.Schema.Course, id: id)
+  end
+
+  def find_course_module_by_id(id) do
+    Backend.Repo.get_by(Backend.Instructors.Schema.Course.Module, id: id)
   end
 end

@@ -41,10 +41,15 @@ defmodule BackendWeb.Router do
       scope "/projects" do
         put("/create", InstructorsController, :create_project)
         put("/update", InstructorsController, :update_project)
+      end
 
-        scope "/courses" do
-          put("/create", InstructorsController, :create_course)
-          put("/update", InstructorsController, :update_course)
+      scope "/courses" do
+        put("/create", InstructorsController, :create_course)
+        put("/update", InstructorsController, :update_course)
+
+        scope "/modules" do
+          put("/create", InstructorsController, :create_course_module)
+          put("/update", InstructorsController, :update_course_module)
         end
       end
     end

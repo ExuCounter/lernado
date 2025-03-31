@@ -2,7 +2,7 @@ defmodule Backend.Instructors.Schema.Project do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @derive {Jason.Encoder, only: [:id, :name]}
+  @derive {Jason.Encoder, only: [:id, :name, :inserted_at, :updated_at]}
   @primary_key {:id, :binary_id, autogenerate: true}
   schema "instructor_projects" do
     field :name, :string

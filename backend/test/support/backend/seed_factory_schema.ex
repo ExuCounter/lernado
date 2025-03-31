@@ -30,7 +30,6 @@ defmodule Backend.SeedFactorySchema do
   end
 
   command :create_instructor_project do
-    param(:user, entity: :user)
     param(:instructor, entity: :instructor)
     param(:name, generate: &Faker.Lorem.sentence/0)
 
@@ -44,8 +43,6 @@ defmodule Backend.SeedFactorySchema do
   end
 
   command :create_instructor_course do
-    param(:user, entity: :user)
-    param(:instructor, entity: :instructor)
     param(:project, entity: :instructor_project)
     param(:name, generate: &Faker.Company.name/0)
 
@@ -56,5 +53,20 @@ defmodule Backend.SeedFactorySchema do
     end)
 
     produce(:instructor_course)
+  end
+
+  command :create_course_module do
+    param(:course, entity: :instructor_course)
+    param(:title, generate: &Faker.Lorem.sentence/0)
+    param(:description, generate: &Faker.Lorem.paragraph/0)
+
+    resolve(fn args ->
+      with {:ok, course_module} <-
+             args.course |> Backend.Instructors.create_course_module(args) do
+        {:ok, %{instructor_course_module: course_module}}
+      end
+    end)
+
+    produce(:instructor_course_module)
   end
 end

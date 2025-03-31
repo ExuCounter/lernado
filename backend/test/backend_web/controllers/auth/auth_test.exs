@@ -6,7 +6,7 @@ defmodule BackendWeb.Controllers.AuthTest do
       ctx = ctx |> produce([:user, conn: [:unauthenticated]])
 
       conn =
-        post(ctx.conn, "/auth/login", %{
+        post(ctx.conn, ~p"/auth/login", %{
           "email" => ctx.user.email,
           "password" => ctx.user.password
         })
@@ -25,7 +25,7 @@ defmodule BackendWeb.Controllers.AuthTest do
       ctx = ctx |> produce(conn: [:unauthenticated])
 
       conn =
-        post(ctx.conn, "/auth/login", %{
+        post(ctx.conn, ~p"/auth/login", %{
           "email" => Faker.Internet.email(),
           "password" => Faker.String.base64()
         })
@@ -37,7 +37,7 @@ defmodule BackendWeb.Controllers.AuthTest do
       ctx = ctx |> produce([:user, conn: [:unauthenticated]])
 
       conn =
-        post(ctx.conn, "/auth/login", %{
+        post(ctx.conn, ~p"/auth/login", %{
           "email" => ctx.user.email,
           "password" => ctx.user.password <> "wrong"
         })
@@ -49,7 +49,7 @@ defmodule BackendWeb.Controllers.AuthTest do
       ctx = ctx |> produce(conn: [:unauthenticated])
 
       conn =
-        post(ctx.conn, "/auth/register", %{
+        post(ctx.conn, ~p"/auth/register", %{
           "email" => Faker.Internet.email(),
           "password" => Faker.String.base64(),
           "first_name" => Faker.Person.first_name(),
@@ -71,7 +71,7 @@ defmodule BackendWeb.Controllers.AuthTest do
       ctx = ctx |> produce([:user, conn: [:unauthenticated]])
 
       conn =
-        post(ctx.conn, "/auth/register", %{
+        post(ctx.conn, ~p"/auth/register", %{
           "email" => ctx.user.email,
           "password" => ctx.user.password
         })

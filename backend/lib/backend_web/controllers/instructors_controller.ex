@@ -105,4 +105,61 @@ defmodule BackendWeb.InstructorsController do
       end
     end
   end
+
+  def create_course_module(conn, %{"course_id" => nil}) do
+    conn |> not_found_response("Course ID is required.")
+  end
+
+  def create_course_module(conn, params) do
+    course = Backend.Instructors.find_course_by_id(params["course_id"])
+
+    if is_nil(course) do
+      conn |> not_found_response()
+    else
+      with true <-
+             Backend.Instructors.authorize(:create_course_module, conn.assigns.current_user, %{
+               course: course
+             }),
+           {:ok, module} <- Backend.Instructors.create_course_module(course, params) do
+        module = Backend.Repo.preload(module, course: :project)
+
+        conn |> successful_response(%{module: module})
+      else
+        false ->
+          conn |> forbidden_response()
+
+        {:error, changeset} ->
+          conn |> failed_changeset_response(changeset)
+      end
+    end
+  end
+
+  def update_course_module(conn, %{"module_id" => nil}) do
+    # dbg(conn)
+    conn |> not_found_response("Course ID is required.")
+  end
+
+  def update_course_module(conn, params) do
+    course_module = Backend.Instructors.find_course_module_by_id(params["module_id"])
+
+    if is_nil(course_module) do
+      conn |> not_found_response()
+    else
+      with true <-
+             Backend.Instructors.authorize(:update_course_module, conn.assigns.current_user, %{
+               course_module: course_module
+             }),
+           {:ok, course_module} <- Backend.Instructors.update_course_module(course_module, params) do
+        course_module = Backend.Repo.preload(course_module, :course)
+
+        conn |> successful_response(%{course_module: course_module})
+      else
+        false ->
+          conn |> forbidden_response()
+
+        {:error, changeset} ->
+          conn |> failed_changeset_response(changeset)
+      end
+    end
+  end
 end
