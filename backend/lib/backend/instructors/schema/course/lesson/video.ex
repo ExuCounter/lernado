@@ -1,5 +1,6 @@
 defmodule Backend.Instructors.Schema.Course.Lesson.Video do
   use Ecto.Schema
+  import Ecto.Changeset
 
   @derive {Jason.Encoder,
            only: [:id, :description, :video_url, :lesson, :inserted_at, :updated_at]}
@@ -12,5 +13,13 @@ defmodule Backend.Instructors.Schema.Course.Lesson.Video do
     belongs_to :module, Backend.Instructors.Schema.Course.Module, type: :binary_id
 
     timestamps()
+  end
+
+  def create_changeset(lesson, attrs) do
+    %__MODULE__{
+      lesson_id: lesson.id
+    }
+    |> cast(attrs, [:description, :video_url])
+    |> validate_required([:description, :video_url])
   end
 end

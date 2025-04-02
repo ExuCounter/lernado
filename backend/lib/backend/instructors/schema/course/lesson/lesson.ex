@@ -12,6 +12,9 @@ defmodule Backend.Instructors.Schema.Course.Lesson do
 
     belongs_to :module, Backend.Instructors.Schema.Course.Module, type: :binary_id
 
+    has_one :video, Backend.Instructors.Schema.Course.Lesson.Video
+    has_one :text, Backend.Instructors.Schema.Course.Lesson.Text
+
     timestamps()
   end
 
@@ -29,11 +32,4 @@ defmodule Backend.Instructors.Schema.Course.Lesson do
     |> validate_number(:order_index, greater_than_or_equal_to: 0)
     |> unique_constraint([:module_id, :order_index])
   end
-
-  # def update_changeset(lesson, attrs) do
-  #   lesson
-  #   |> cast(attrs, [:title, :type])
-  #   |> validate_required([:title, :type])
-  #   |> validate_length(:title, min: 3)
-  # end
 end

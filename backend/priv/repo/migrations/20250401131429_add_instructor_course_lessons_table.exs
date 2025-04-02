@@ -17,8 +17,8 @@ defmodule YourApp.Repo.Migrations.AddInstructorCourseLessonsTable do
       timestamps()
     end
 
-    create unique_index(:instructor_course_lessons, [:module_id, :title])
-    create unique_index(:instructor_course_lessons, [:module_id, :order_index])
+    create unique_index(:instructor_course_lessons, [:title, :module_id])
+    create unique_index(:instructor_course_lessons, [:order_index, :module_id])
 
     create constraint(:instructor_course_lessons, :order_greater_than_zero,
              check: "order_index >= 0"

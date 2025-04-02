@@ -51,6 +51,10 @@ defmodule BackendWeb.Router do
           put("/create", InstructorsController, :create_course_module)
           put("/update", InstructorsController, :update_course_module)
         end
+
+        scope "/lessons" do
+          put("/create", InstructorsController, :create_course_lesson)
+        end
       end
     end
   end

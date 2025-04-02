@@ -25,7 +25,8 @@ defmodule Backend.Instructors.Schema.Course.Module do
     }
     |> cast(attrs, [:title, :description])
     |> validate_required([:title, :order_index])
-    |> unique_constraint(:title)
+    |> unique_constraint([:order_index, :course_id])
+    |> unique_constraint([:title, :course_id])
     |> foreign_key_constraint(:course_id)
     |> validate_length(:title, min: 3)
   end
@@ -34,7 +35,8 @@ defmodule Backend.Instructors.Schema.Course.Module do
     module
     |> cast(attrs, [:title, :description])
     |> validate_required([:title])
-    |> unique_constraint(:title)
+    |> unique_constraint([:order_index, :course_id])
+    |> unique_constraint([:title, :course_id])
     |> foreign_key_constraint(:course_id)
     |> validate_length(:title, min: 3)
   end

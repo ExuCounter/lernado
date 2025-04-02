@@ -199,7 +199,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
                    "title" => "Title",
                    "description" => "Description",
                    "course" => %{"id" => ^course_id},
-                   "order" => 0
+                   "order_index" => 0
                  }
                }
              } = Jason.decode!(conn.resp_body)
@@ -214,7 +214,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
       assert %{
                "data" => %{
                  "module" => %{
-                   "order" => 1
+                   "order_index" => 1
                  }
                }
              } = Jason.decode!(conn.resp_body)

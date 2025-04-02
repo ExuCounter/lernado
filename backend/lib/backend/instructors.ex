@@ -55,4 +55,22 @@ defmodule Backend.Instructors do
   def find_course_module_by_id(id) do
     Backend.Repo.get_by(Backend.Instructors.Schema.Course.Module, id: id)
   end
+
+  def create_course_lesson(module, attrs) do
+    Ecto.Multi.new()
+    |> Ecto.Multi.insert(
+      :lesson,
+      Backend.Instructors.Schema.Course.Lesson.create_changeset(module, attrs)
+    )
+    |> Ecto.Multi.insert(:lesson_by_type, fn %{lesson: lesson} ->
+      case lesson.type do
+        "video" -> Backend.Instructors.Schema.Course.Lesson.Video.create_changeset(lesson, attrs)
+        "text" -> Backend.Instructors.Schema.Course.Lesson.Text.create_changeset(lesson, attrs)
+      end
+    end)
+    |> case do
+      {:ok, %{lesson: lesson}} -> {:ok, lesson}
+      {:error, _} -> {:error, "Something went wrong."}
+    end
+  end
 end

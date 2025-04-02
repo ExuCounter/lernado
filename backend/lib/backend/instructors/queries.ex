@@ -5,7 +5,7 @@ defmodule Backend.Instructors.Queries do
     query =
       from(modules in Backend.Instructors.Schema.Course.Module,
         where: modules.course_id == ^course.id,
-        select: modules.order
+        select: modules.order_index
       )
 
     order_indexes = Backend.Repo.all(query)

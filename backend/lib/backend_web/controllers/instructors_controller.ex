@@ -162,4 +162,32 @@ defmodule BackendWeb.InstructorsController do
       end
     end
   end
+
+  def create_course_lesson(conn, %{"module_id" => nil}) do
+    conn |> not_found_response("Module ID is required.")
+  end
+
+  def create_course_lesson(conn, params) do
+    course_module = Backend.Instructors.find_course_module_by_id(params["module_id"])
+
+    if is_nil(course_module) do
+      conn |> not_found_response()
+    else
+      with true <-
+             Backend.Instructors.authorize(:create_course_lesson, conn.assigns.current_user, %{
+               course_module: course_module
+             }),
+           {:ok, lesson} <- Backend.Instructors.create_course_lesson(course_module, params) do
+        lesson = Backend.Repo.preload(lesson, course_module: :course)
+
+        conn |> successful_response(%{lesson: lesson})
+      else
+        false ->
+          conn |> forbidden_response()
+
+        {:error, changeset} ->
+          conn |> failed_changeset_response(changeset)
+      end
+    end
+  end
 end
