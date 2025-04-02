@@ -3,12 +3,12 @@ defmodule Backend.Instructors.Schema.Course.Module do
   import Ecto.Changeset
 
   @derive {Jason.Encoder,
-           only: [:id, :title, :description, :order, :course, :inserted_at, :updated_at]}
+           only: [:id, :title, :description, :order_index, :course, :inserted_at, :updated_at]}
   @primary_key {:id, :binary_id, autogenerate: true}
   schema "instructor_course_modules" do
     field :title, :string
     field :description, :string
-    field :order, :integer
+    field :order_index, :integer
 
     belongs_to :course, Backend.Instructors.Schema.Course, type: :binary_id
 
@@ -16,15 +16,15 @@ defmodule Backend.Instructors.Schema.Course.Module do
   end
 
   def create_changeset(course, attrs) do
-    order = Backend.Instructors.Queries.get_next_course_module_order(course)
+    order_index = Backend.Instructors.Queries.get_next_course_module_order_index(course)
 
     %__MODULE__{
       course_id: course.id,
       description: "",
-      order: order
+      order_index: order_index
     }
     |> cast(attrs, [:title, :description])
-    |> validate_required([:title, :order])
+    |> validate_required([:title, :order_index])
     |> unique_constraint(:title)
     |> foreign_key_constraint(:course_id)
     |> validate_length(:title, min: 3)
