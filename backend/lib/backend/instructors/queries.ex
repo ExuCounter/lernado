@@ -1,35 +1,21 @@
 defmodule Backend.Instructors.Queries do
   import Ecto.Query
 
-  def get_next_course_module_order_index(course) do
-    query =
-      from(modules in Backend.Instructors.Schema.Course.Module,
-        where: modules.course_id == ^course.id,
-        select: modules.order_index
-      )
-
-    order_indexes = Backend.Repo.all(query)
-
-    if Enum.empty?(order_indexes) do
-      0
-    else
-      Enum.max(order_indexes) + 1
-    end
+  def get_current_highest_order_index_for_course_module(course) do
+    from(modules in Backend.Instructors.Schema.Course.Module,
+      where: modules.course_id == ^course.id,
+      order_by: [desc: modules.order_index],
+      limit: 1,
+      select: modules.order_index
+    )
   end
 
-  def get_next_course_lesson_order_index(module) do
-    query =
-      from(m in Backend.Instructors.Schema.Course.Lesson,
-        where: m.id == ^module.id,
-        select: m.order_index
-      )
-
-    order_indexes = Backend.Repo.all(query)
-
-    if Enum.empty?(order_indexes) do
-      0
-    else
-      Enum.max(order_indexes) + 1
-    end
+  def get_current_highest_order_index_for_course_lesson(module) do
+    from(lessons in Backend.Instructors.Schema.Course.Lesson,
+      where: lessons.module_id == ^module.id,
+      order_by: [desc: lessons.order_index],
+      limit: 1,
+      select: lessons.order_index
+    )
   end
 end

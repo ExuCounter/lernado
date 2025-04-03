@@ -2,8 +2,7 @@ defmodule Backend.Instructors.Schema.Course.Lesson.Video do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @derive {Jason.Encoder,
-           only: [:id, :description, :video_url, :lesson, :inserted_at, :updated_at]}
+  @derive {Jason.Encoder, only: [:id, :description, :video_url, :inserted_at, :updated_at]}
   @primary_key {:id, :binary_id, autogenerate: true}
   schema "instructor_course_lesson_videos" do
     field :description, :string
@@ -17,9 +16,10 @@ defmodule Backend.Instructors.Schema.Course.Lesson.Video do
 
   def create_changeset(lesson, attrs) do
     %__MODULE__{
-      lesson_id: lesson.id
+      lesson_id: lesson.id,
+      description: ""
     }
-    |> cast(attrs, [:description, :video_url])
-    |> validate_required([:description, :video_url])
+    |> cast(attrs, [:video_url])
+    |> validate_required([:video_url])
   end
 end

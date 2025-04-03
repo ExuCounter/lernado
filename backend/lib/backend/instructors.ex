@@ -56,6 +56,31 @@ defmodule Backend.Instructors do
     Backend.Repo.get_by(Backend.Instructors.Schema.Course.Module, id: id)
   end
 
+  def get_next_course_module_order_index(course) do
+    current_highest_order_index =
+      Backend.Instructors.Queries.get_current_highest_order_index_for_course_module(course)
+      |> Backend.Repo.one()
+
+    if is_nil(current_highest_order_index) do
+      0
+    else
+      current_highest_order_index + 1
+    end
+  end
+
+  def get_next_course_lesson_order_index(module) do
+    current_highest_order_index =
+      Backend.Instructors.Queries.get_current_highest_order_index_for_course_lesson(module)
+      |> Backend.Repo.one()
+
+
+    if is_nil(current_highest_order_index) do
+      0
+    else
+      current_highest_order_index + 1
+    end
+  end
+
   def create_course_lesson(module, attrs) do
     Ecto.Multi.new()
     |> Ecto.Multi.insert(
@@ -64,13 +89,14 @@ defmodule Backend.Instructors do
     )
     |> Ecto.Multi.insert(:lesson_by_type, fn %{lesson: lesson} ->
       case lesson.type do
-        "video" -> Backend.Instructors.Schema.Course.Lesson.Video.create_changeset(lesson, attrs)
-        "text" -> Backend.Instructors.Schema.Course.Lesson.Text.create_changeset(lesson, attrs)
+        :video -> Backend.Instructors.Schema.Course.Lesson.Video.create_changeset(lesson, attrs)
+        :text -> Backend.Instructors.Schema.Course.Lesson.Text.create_changeset(lesson, attrs)
       end
     end)
+    |> Backend.Repo.transaction()
     |> case do
       {:ok, %{lesson: lesson}} -> {:ok, lesson}
-      {:error, _} -> {:error, "Something went wrong."}
+      {:error, :lesson, changeset, _changes} -> {:error, changeset}
     end
   end
 end

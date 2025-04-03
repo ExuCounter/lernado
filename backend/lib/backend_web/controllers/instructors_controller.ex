@@ -178,7 +178,9 @@ defmodule BackendWeb.InstructorsController do
                course_module: course_module
              }),
            {:ok, lesson} <- Backend.Instructors.create_course_lesson(course_module, params) do
-        lesson = Backend.Repo.preload(lesson, course_module: :course)
+        lesson =
+          lesson
+          |> Backend.Repo.preload([:text_details, :video_details, module: [course: :project]])
 
         conn |> successful_response(%{lesson: lesson})
       else

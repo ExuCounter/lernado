@@ -272,5 +272,88 @@ defmodule BackendWeb.Controllers.InstructorsTest do
 
       assert_forbidden_response(conn)
     end
+
+    test "create course lesson", ctx do
+      ctx =
+        ctx
+        |> produce([
+          :user,
+          :instructor,
+          :instructor_project,
+          :instructor_course,
+          :instructor_course_module,
+          conn: [:user_session]
+        ])
+
+      module_id = ctx.instructor_course_module.id
+
+      conn =
+        put(ctx.conn, ~p"/api/instructors/courses/lessons/create", %{
+          "module_id" => module_id,
+          "title" => "Text Lesson 1",
+          "content" => "Content",
+          "type" => "text"
+        })
+
+      assert %{
+               "data" => %{
+                 "lesson" => %{
+                   "title" => "Text Lesson 1",
+                   "module" => %{"id" => ^module_id},
+                   "order_index" => 0,
+                   "text_details" => %{
+                     "content" => "Content"
+                   }
+                 }
+               }
+             } = Jason.decode!(conn.resp_body)
+
+      conn =
+        put(ctx.conn, ~p"/api/instructors/courses/lessons/create", %{
+          "module_id" => ctx.instructor_course_module.id,
+          "title" => "Text Lesson 2",
+          "content" => "Description",
+          "type" => "text"
+        })
+
+      assert %{
+               "data" => %{
+                 "lesson" => %{
+                   "order_index" => 1
+                 }
+               }
+             } = Jason.decode!(conn.resp_body)
+
+      conn =
+        put(ctx.conn, ~p"/api/instructors/courses/lessons/create", %{
+          "module_id" => ctx.instructor_course_module.id,
+          "title" => "Text Lesson 2",
+          "content" => "Content",
+          "type" => "text"
+        })
+
+      assert_bad_request_response(conn, %{"title" => ["has already been taken"]})
+
+      conn =
+        put(ctx.conn, ~p"/api/instructors/courses/lessons/create", %{
+          "module_id" => ctx.instructor_course_module.id,
+          "title" => "Video Lesson 1",
+          "type" => "video",
+          "video_url" => "https://youtube.com/video"
+        })
+
+      assert %{
+               "data" => %{
+                 "lesson" => %{
+                   "title" => "Video Lesson 1",
+                   "module" => %{"id" => ^module_id},
+                   "order_index" => 2,
+                   "video_details" => %{
+                     "video_url" => "https://youtube.com/video"
+                   }
+                 }
+               }
+             } = Jason.decode!(conn.resp_body)
+    end
   end
 end

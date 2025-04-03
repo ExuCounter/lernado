@@ -16,7 +16,7 @@ defmodule Backend.Instructors.Schema.Course.Module do
   end
 
   def create_changeset(course, attrs) do
-    order_index = Backend.Instructors.Queries.get_next_course_module_order_index(course)
+    order_index = Backend.Instructors.get_next_course_module_order_index(course)
 
     %__MODULE__{
       course_id: course.id,

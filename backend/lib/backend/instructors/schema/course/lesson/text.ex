@@ -2,7 +2,7 @@ defmodule Backend.Instructors.Schema.Course.Lesson.Text do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @derive {Jason.Encoder, only: [:id, :content, :lesson, :inserted_at, :updated_at]}
+  @derive {Jason.Encoder, only: [:id, :content, :inserted_at, :updated_at]}
   @primary_key {:id, :binary_id, autogenerate: true}
   schema "instructor_course_lesson_texts" do
     field :content, :string

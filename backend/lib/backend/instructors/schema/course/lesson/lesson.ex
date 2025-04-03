@@ -3,7 +3,17 @@ defmodule Backend.Instructors.Schema.Course.Lesson do
   import Ecto.Changeset
 
   @derive {Jason.Encoder,
-           only: [:id, :title, :type, :order_index, :module, :inserted_at, :updated_at]}
+           only: [
+             :id,
+             :title,
+             :type,
+             :order_index,
+             :module,
+             :video_details,
+             :text_details,
+             :inserted_at,
+             :updated_at
+           ]}
   @primary_key {:id, :binary_id, autogenerate: true}
   schema "instructor_course_lessons" do
     field :title, :string
@@ -12,14 +22,16 @@ defmodule Backend.Instructors.Schema.Course.Lesson do
 
     belongs_to :module, Backend.Instructors.Schema.Course.Module, type: :binary_id
 
-    has_one :video, Backend.Instructors.Schema.Course.Lesson.Video
-    has_one :text, Backend.Instructors.Schema.Course.Lesson.Text
+    has_one :video_details, Backend.Instructors.Schema.Course.Lesson.Video,
+      foreign_key: :lesson_id
+
+    has_one :text_details, Backend.Instructors.Schema.Course.Lesson.Text, foreign_key: :lesson_id
 
     timestamps()
   end
 
   def create_changeset(module, attrs) do
-    order_index = Backend.Instructors.Queries.get_next_course_lesson_order_index(module)
+    order_index = Backend.Instructors.get_next_course_lesson_order_index(module)
 
     %__MODULE__{
       module_id: module.id,
@@ -30,6 +42,7 @@ defmodule Backend.Instructors.Schema.Course.Lesson do
     |> foreign_key_constraint(:module_id)
     |> validate_length(:title, min: 3)
     |> validate_number(:order_index, greater_than_or_equal_to: 0)
-    |> unique_constraint([:module_id, :order_index])
+    |> unique_constraint([:order_index, :module_id])
+    |> unique_constraint([:title, :module_id])
   end
 end
