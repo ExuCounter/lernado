@@ -56,6 +56,10 @@ defmodule Backend.Instructors do
     Backend.Repo.get_by(Backend.Instructors.Schema.Course.Module, id: id)
   end
 
+  def find_course_lesson_by_id(id) do
+    Backend.Repo.get_by(Backend.Instructors.Schema.Course.Lesson, id: id)
+  end
+
   def get_next_course_module_order_index(course) do
     current_highest_order_index =
       Backend.Instructors.Queries.get_current_highest_order_index_for_course_module(course)
@@ -72,7 +76,6 @@ defmodule Backend.Instructors do
     current_highest_order_index =
       Backend.Instructors.Queries.get_current_highest_order_index_for_course_lesson(module)
       |> Backend.Repo.one()
-
 
     if is_nil(current_highest_order_index) do
       0
@@ -97,6 +100,72 @@ defmodule Backend.Instructors do
     |> case do
       {:ok, %{lesson: lesson}} -> {:ok, lesson}
       {:error, :lesson, changeset, _changes} -> {:error, changeset}
+    end
+  end
+
+  def delete_course_lesson(lesson) do
+    Backend.Repo.delete(lesson)
+  end
+
+  def update_course_lesson(lesson, attrs) do
+    current_lesson_type = lesson.type
+    incoming_lesson_type = Map.get(attrs, "type") |> String.to_existing_atom()
+    lesson_type_changed? = current_lesson_type != incoming_lesson_type
+
+    Ecto.Multi.new()
+    |> Ecto.Multi.update(
+      :lesson,
+      Backend.Instructors.Schema.Course.Lesson.update_changeset(lesson, attrs)
+    )
+    |> Ecto.Multi.run(:maybe_delete_lesson_by_type, fn repo, %{lesson: lesson} ->
+      if lesson_type_changed? do
+        lesson_by_type =
+          case current_lesson_type do
+            :video -> Backend.Instructors.Schema.Course.Lesson.Video.get_by_lesson_id(lesson.id)
+            :text -> Backend.Instructors.Schema.Course.Lesson.Text.get_by_lesson_id(lesson.id)
+          end
+
+        repo.delete(lesson_by_type)
+      else
+        {:ok, nil}
+      end
+    end)
+    |> Ecto.Multi.run(:maybe_create_lesson_by_type, fn repo, %{lesson: lesson} ->
+      if lesson_type_changed? do
+        lesson_by_type =
+          case incoming_lesson_type do
+            :video ->
+              Backend.Instructors.Schema.Course.Lesson.Video.create_changeset(lesson, attrs)
+
+            :text ->
+              Backend.Instructors.Schema.Course.Lesson.Text.create_changeset(lesson, attrs)
+          end
+
+        repo.insert(lesson_by_type)
+      else
+        {:ok, nil}
+      end
+    end)
+    |> Ecto.Multi.run(:maybe_update_lesson_by_type, fn repo, %{lesson: lesson} ->
+      if lesson_type_changed? do
+        {:ok, nil}
+      else
+        lesson_by_type =
+          case current_lesson_type do
+            :video ->
+              Backend.Instructors.Schema.Course.Lesson.Video.update_changeset(lesson, attrs)
+
+            :text ->
+              Backend.Instructors.Schema.Course.Lesson.Text.update_changeset(lesson, attrs)
+          end
+
+        repo.update(lesson_by_type)
+      end
+    end)
+    |> Backend.Repo.transaction()
+    |> case do
+      {:ok, %{lesson: lesson}} -> {:ok, lesson}
+      {:error, _, changeset, _changes} -> {:error, changeset}
     end
   end
 end

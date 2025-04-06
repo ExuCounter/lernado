@@ -19,7 +19,17 @@ defmodule Backend.Instructors.Schema.Course.Lesson.Video do
       lesson_id: lesson.id,
       description: ""
     }
-    |> cast(attrs, [:video_url])
+    |> cast(attrs, [:video_url, :description])
     |> validate_required([:video_url])
+  end
+
+  def update_changeset(video, attrs) do
+    video
+    |> cast(attrs, [:video_url, :description])
+    |> validate_required([:video_url])
+  end
+
+  def get_by_lesson_id(lesson_id) do
+    Backend.Repo.get_by(__MODULE__, lesson_id: lesson_id)
   end
 end

@@ -40,4 +40,16 @@ defmodule Backend.Instructors.Policy do
 
     user.id == course_module.course.project.instructor.user_id
   end
+
+  def authorize(:update_course_lesson, user, %{course_lesson: course_lesson} = _params) do
+    course_lesson = Backend.Repo.preload(course_lesson, module: [course: [project: :instructor]])
+
+    user.id == course_lesson.module.course.project.instructor.user_id
+  end
+
+  def authorize(:delete_course_lesson, user, %{course_lesson: course_lesson} = _params) do
+    course_lesson = Backend.Repo.preload(course_lesson, module: [course: [project: :instructor]])
+
+    user.id == course_lesson.module.course.project.instructor.user_id
+  end
 end

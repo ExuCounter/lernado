@@ -192,4 +192,64 @@ defmodule BackendWeb.InstructorsController do
       end
     end
   end
+
+  def update_course_lesson(conn, %{"lesson_id" => nil}) do
+    conn |> not_found_response("Lesson ID is required.")
+  end
+
+  def update_course_lesson(conn, params) do
+    lesson = Backend.Instructors.find_course_lesson_by_id(params["lesson_id"])
+
+    if is_nil(lesson) do
+      conn |> not_found_response()
+    else
+      with true <-
+             Backend.Instructors.authorize(:update_course_lesson, conn.assigns.current_user, %{
+               course_lesson: lesson
+             }),
+           {:ok, lesson} <- Backend.Instructors.update_course_lesson(lesson, params) do
+        lesson =
+          lesson
+          |> Backend.Repo.preload([:text_details, :video_details, module: [course: :project]])
+
+        conn |> successful_response(%{lesson: lesson})
+      else
+        false ->
+          conn |> forbidden_response()
+
+        {:error, changeset} ->
+          conn |> failed_changeset_response(changeset)
+      end
+    end
+  end
+
+  def delete_course_lesson(conn, %{"lesson_id" => nil}) do
+    conn |> not_found_response("Lesson ID is required.")
+  end
+
+  def delete_course_lesson(conn, params) do
+    lesson = Backend.Instructors.find_course_lesson_by_id(params["lesson_id"])
+
+    if is_nil(lesson) do
+      conn |> not_found_response()
+    else
+      with true <-
+             Backend.Instructors.authorize(:delete_course_lesson, conn.assigns.current_user, %{
+               course_lesson: lesson
+             }),
+           {:ok, lesson} <- Backend.Instructors.delete_course_lesson(lesson) do
+        lesson =
+          lesson
+          |> Backend.Repo.preload([:text_details, :video_details, module: [course: :project]])
+
+        conn |> successful_response(%{lesson: lesson})
+      else
+        false ->
+          conn |> forbidden_response()
+
+        {:error, changeset} ->
+          conn |> failed_changeset_response(changeset)
+      end
+    end
+  end
 end

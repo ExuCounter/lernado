@@ -355,5 +355,111 @@ defmodule BackendWeb.Controllers.InstructorsTest do
                }
              } = Jason.decode!(conn.resp_body)
     end
+
+    test "update non-existing course lesson", ctx do
+      ctx =
+        ctx
+        |> produce([
+          :user,
+          :instructor,
+          :instructor_project,
+          :instructor_course,
+          :instructor_course_module,
+          conn: [:user_session]
+        ])
+
+      conn =
+        put(ctx.conn, ~p"/api/instructors/courses/lessons/update", %{
+          "lesson_id" => Faker.UUID.v4(),
+          "title" => "Text Lesson 1",
+          "content" => "Content",
+          "type" => "text"
+        })
+
+      assert_not_found_response(conn)
+    end
+
+    test "update stranger course lesson", ctx do
+      ctx1 =
+        ctx
+        |> produce([
+          :user,
+          :instructor,
+          :instructor_project,
+          :instructor_course,
+          :instructor_course_module,
+          :instructor_course_lesson
+        ])
+
+      ctx2 = ctx |> produce([:user, conn: [:user_session]])
+
+      conn =
+        put(ctx2.conn, ~p"/api/instructors/courses/lessons/update", %{
+          "lesson_id" => ctx1.instructor_course_lesson.id,
+          "title" => "Text Lesson 1",
+          "content" => "Content",
+          "type" => "text"
+        })
+
+      assert_forbidden_response(conn)
+    end
+
+    test "update own course and change it type", ctx do
+      ctx =
+        ctx
+        |> produce([
+          :user,
+          :instructor,
+          :instructor_project,
+          :instructor_course,
+          :instructor_course_module,
+          :instructor_course_lesson,
+          conn: [:user_session]
+        ])
+
+      conn =
+        put(ctx.conn, ~p"/api/instructors/courses/lessons/update", %{
+          "lesson_id" => ctx.instructor_course_lesson.id,
+          "title" => "Text Lesson 1",
+          "content" => "Content",
+          "type" => "video",
+          "video_url" => "https://youtube.com/video"
+        })
+
+      assert_successfull_response(conn)
+
+      assert %{
+               "data" => %{
+                 "lesson" => %{
+                   "title" => "Text Lesson 1",
+                   "type" => "video",
+                   "video_details" => %{
+                     "video_url" => "https://youtube.com/video"
+                   }
+                 }
+               }
+             } = Jason.decode!(conn.resp_body)
+    end
+
+    test "delete course lesson", ctx do
+      ctx =
+        ctx
+        |> produce([
+          :user,
+          :instructor,
+          :instructor_project,
+          :instructor_course,
+          :instructor_course_module,
+          :instructor_course_lesson,
+          conn: [:user_session]
+        ])
+
+      conn =
+        put(ctx.conn, ~p"/api/instructors/courses/lessons/delete", %{
+          "lesson_id" => ctx.instructor_course_lesson.id
+        })
+
+      assert_successfull_response(conn)
+    end
   end
 end

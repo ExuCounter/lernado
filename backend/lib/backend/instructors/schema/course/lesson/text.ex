@@ -20,4 +20,14 @@ defmodule Backend.Instructors.Schema.Course.Lesson.Text do
     |> cast(attrs, [:content])
     |> validate_required([:content])
   end
+
+  def update_changeset(lesson, attrs) do
+    lesson
+    |> cast(attrs, [:content])
+    |> validate_required([:content])
+  end
+
+  def get_by_lesson_id(lesson_id) do
+    Backend.Repo.get_by(__MODULE__, lesson_id: lesson_id)
+  end
 end

@@ -45,4 +45,12 @@ defmodule Backend.Instructors.Schema.Course.Lesson do
     |> unique_constraint([:order_index, :module_id])
     |> unique_constraint([:title, :module_id])
   end
+
+  def update_changeset(lesson, attrs) do
+    lesson
+    |> cast(attrs, [:title, :type])
+    |> validate_required([:title, :type])
+    |> validate_length(:title, min: 3)
+    |> unique_constraint([:title, :module_id])
+  end
 end

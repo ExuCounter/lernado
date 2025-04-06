@@ -69,4 +69,22 @@ defmodule Backend.SeedFactorySchema do
 
     produce(:instructor_course_module)
   end
+
+  command :create_course_lesson do
+    param(:module, entity: :instructor_course_module)
+    param(:title, generate: &Faker.Lorem.sentence/0)
+    param(:description, generate: &Faker.Lorem.paragraph/0)
+    param(:type, value: :text)
+    param(:video_url)
+    param(:content, generate: &Faker.Lorem.paragraph/0)
+
+    resolve(fn args ->
+      with {:ok, course_lesson} <-
+             args.module |> Backend.Instructors.create_course_lesson(args) do
+        {:ok, %{instructor_course_lesson: course_lesson}}
+      end
+    end)
+
+    produce(:instructor_course_lesson)
+  end
 end
