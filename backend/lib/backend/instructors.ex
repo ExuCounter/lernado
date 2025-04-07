@@ -101,37 +101,30 @@ defmodule Backend.Instructors do
     Backend.Repo.delete(lesson)
   end
 
+  @lesson_details_mapper %{
+    video: Backend.Instructors.Schema.Course.Lesson.Video,
+    text: Backend.Instructors.Schema.Course.Lesson.Text
+  }
+
   def update_course_lesson(lesson, attrs) do
     current_lesson_type = lesson.type
-    incoming_lesson_type = Map.get(attrs, "type") |> String.to_existing_atom()
+    incoming_lesson_type = Map.get(attrs, "type") |> :erlang.binary_to_atom()
     lesson_type_changed? = current_lesson_type != incoming_lesson_type
 
-    if lesson_type_changed? do
+    multi =
       Ecto.Multi.new()
       |> Ecto.Multi.update(
         :lesson,
         Backend.Instructors.Schema.Course.Lesson.update_changeset(lesson, attrs)
       )
-      |> Ecto.Multi.run(:delete_lesson_details, fn repo, %{lesson: lesson} ->
-        existing_lesson_details =
-          case current_lesson_type do
-            :video -> Backend.Instructors.Schema.Course.Lesson.Video.get_by_lesson_id(lesson.id)
-            :text -> Backend.Instructors.Schema.Course.Lesson.Text.get_by_lesson_id(lesson.id)
-          end
 
-        repo.delete(existing_lesson_details)
+    if lesson_type_changed? do
+      multi
+      |> Ecto.Multi.delete(:delete_lesson_details, fn %{lesson: lesson} ->
+        @lesson_details_mapper[current_lesson_type].get_by_lesson_id(lesson.id)
       end)
-      |> Ecto.Multi.run(:create_lesson_details, fn repo, %{lesson: lesson} ->
-        lesson_details =
-          case incoming_lesson_type do
-            :video ->
-              Backend.Instructors.Schema.Course.Lesson.Video.create_changeset(lesson, attrs)
-
-            :text ->
-              Backend.Instructors.Schema.Course.Lesson.Text.create_changeset(lesson, attrs)
-          end
-
-        repo.insert(lesson_details)
+      |> Ecto.Multi.insert(:create_lesson_details, fn %{lesson: lesson} ->
+        @lesson_details_mapper[incoming_lesson_type].create_changeset(lesson, attrs)
       end)
       |> Backend.Repo.transaction()
       |> case do
@@ -139,34 +132,12 @@ defmodule Backend.Instructors do
         {:error, _, changeset, _changes} -> {:error, changeset}
       end
     else
-      Ecto.Multi.new()
-      |> Ecto.Multi.update(
-        :lesson,
-        Backend.Instructors.Schema.Course.Lesson.update_changeset(lesson, attrs)
-      )
-      |> Ecto.Multi.run(:update_lesson_details, fn repo, %{lesson: lesson} ->
-        lesson_details =
-          case current_lesson_type do
-            :video -> Backend.Instructors.Schema.Course.Lesson.Video.get_by_lesson_id(lesson.id)
-            :text -> Backend.Instructors.Schema.Course.Lesson.Text.get_by_lesson_id(lesson.id)
-          end
+      multi
+      |> Ecto.Multi.update(:update_lesson_details, fn %{lesson: lesson} ->
+        lesson_details_struct = @lesson_details_mapper[current_lesson_type]
+        lesson_details = lesson_details_struct.get_by_lesson_id(lesson.id)
 
-        lesson_details =
-          case current_lesson_type do
-            :video ->
-              Backend.Instructors.Schema.Course.Lesson.Video.update_changeset(
-                lesson_details,
-                attrs
-              )
-
-            :text ->
-              Backend.Instructors.Schema.Course.Lesson.Text.update_changeset(
-                lesson_details,
-                attrs
-              )
-          end
-
-        repo.update(lesson_details)
+        lesson_details |> lesson_details_struct.update_changeset(attrs)
       end)
       |> Backend.Repo.transaction()
       |> case do
