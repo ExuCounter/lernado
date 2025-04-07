@@ -23,7 +23,7 @@ defmodule Backend.Instructors.Schema.Course do
     field :currency, :string
 
     belongs_to :project, Backend.Instructors.Schema.Project, type: :binary_id
-
+    has_many :modules, Backend.Instructors.Schema.Course.Module, foreign_key: :course_id
     timestamps()
   end
 

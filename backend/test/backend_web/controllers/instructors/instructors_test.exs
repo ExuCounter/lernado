@@ -421,7 +421,6 @@ defmodule BackendWeb.Controllers.InstructorsTest do
         put(ctx.conn, ~p"/api/instructors/courses/lessons/update", %{
           "lesson_id" => ctx.instructor_course_lesson.id,
           "title" => "Text Lesson 1",
-          "content" => "Content",
           "type" => "video",
           "video_url" => "https://youtube.com/video"
         })

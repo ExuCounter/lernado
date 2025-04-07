@@ -11,6 +11,7 @@ defmodule Backend.Instructors.Schema.Course.Module do
     field :order_index, :integer
 
     belongs_to :course, Backend.Instructors.Schema.Course, type: :binary_id
+    has_many :lessons, Backend.Instructors.Schema.Course.Lesson
 
     timestamps()
   end
