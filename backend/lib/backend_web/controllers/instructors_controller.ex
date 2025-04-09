@@ -252,4 +252,32 @@ defmodule BackendWeb.InstructorsController do
       end
     end
   end
+
+  def publish_course(conn, %{"course_id" => nil}) do
+    conn |> not_found_response("Course ID is required.")
+  end
+
+  def publish_course(conn, params) do
+    course = Backend.Instructors.find_course_by_id(params["course_id"])
+
+    if is_nil(course) do
+      conn |> not_found_response()
+    else
+      with true <-
+             Backend.Instructors.authorize(:publish_course, conn.assigns.current_user, %{
+               course: course
+             }),
+           {:ok, course} <- Backend.Instructors.publish_course(course, params) do
+        course = Backend.Repo.preload(course, :project)
+
+        conn |> successful_response(%{course: course})
+      else
+        false ->
+          conn |> forbidden_response()
+
+        {:error, changeset} ->
+          conn |> failed_changeset_response(changeset)
+      end
+    end
+  end
 end

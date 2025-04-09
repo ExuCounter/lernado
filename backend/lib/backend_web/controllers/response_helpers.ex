@@ -60,39 +60,39 @@ defmodule BackendWeb.ResponseHelpers do
   end
 
   def assert_forbidden_response(conn, message \\ @forbidden_message) do
-    assert conn.status == 403
-
     assert %{
              "message" => ^message
            } =
              Jason.decode!(conn.resp_body)
+
+    assert conn.status == 403
   end
 
   def assert_not_found_response(conn, message \\ @not_found_message) do
-    assert conn.status == 404
-
     assert %{
              "message" => ^message
            } =
              Jason.decode!(conn.resp_body)
+
+    assert conn.status == 404
   end
 
   def assert_bad_request_response(conn, message \\ @bad_request_message) do
-    assert conn.status == 400
-
     assert %{
              "message" => ^message
            } =
              Jason.decode!(conn.resp_body)
+
+    assert conn.status == 400
   end
 
   def assert_unauthorized_response(conn, message \\ @unauthorized_message) do
-    assert conn.status == 401
-
     assert %{
              "message" => ^message
            } =
              Jason.decode!(conn.resp_body)
+
+    assert conn.status == 401
   end
 
   def assert_successfull_response(conn) do

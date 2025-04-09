@@ -17,7 +17,11 @@ defmodule Backend.Instructors.Policy do
     user.id == project.instructor.user_id
   end
 
-  def authorize(:update_course, user, %{course: course} = _params) do
+  def authorize(action, user, %{course: course} = _params)
+      when action in [
+             :update_course,
+             :publish_course
+           ] do
     course = Backend.Repo.preload(course, project: [:instructor])
 
     user.id == course.project.instructor.user_id

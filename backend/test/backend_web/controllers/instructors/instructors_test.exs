@@ -460,5 +460,84 @@ defmodule BackendWeb.Controllers.InstructorsTest do
 
       assert_successfull_response(conn)
     end
+
+    test "publish course", ctx do
+      ctx =
+        ctx
+        |> produce([
+          :user,
+          :instructor,
+          :instructor_project,
+          :instructor_course,
+          conn: [:user_session]
+        ])
+
+      conn =
+        put(ctx.conn, ~p"/api/instructors/courses/publish", %{
+          "course_id" => ctx.instructor_course.id
+        })
+
+      assert_bad_request_response(conn, %{"public_path" => ["can't be blank"]})
+
+      Backend.Instructors.update_course(ctx.instructor_course, %{public_path: "course_path"})
+
+      conn =
+        put(ctx.conn, ~p"/api/instructors/courses/publish", %{
+          "course_id" => ctx.instructor_course.id
+        })
+
+      assert %{
+               "data" => %{
+                 "course" => %{
+                   "status" => "published"
+                 }
+               }
+             } = Jason.decode!(conn.resp_body)
+    end
+
+    test "publish stranger course", ctx do
+      ctx1 =
+        ctx
+        |> produce([
+          :user,
+          :instructor,
+          :instructor_project,
+          :instructor_course
+        ])
+
+      ctx2 = ctx |> produce([:user, conn: [:user_session]])
+
+      conn =
+        put(ctx2.conn, ~p"/api/instructors/courses/publish", %{
+          "course_id" => ctx1.instructor_course.id
+        })
+
+      assert_forbidden_response(conn)
+    end
+
+    test "publish already published course", ctx do
+      ctx =
+        ctx
+        |> produce([
+          :user,
+          :instructor,
+          :instructor_project,
+          :instructor_course,
+          conn: [:user_session]
+        ])
+
+      Backend.Instructors.update_course(ctx.instructor_course, %{public_path: "course_path"})
+
+      put(ctx.conn, ~p"/api/instructors/courses/publish", %{
+        "course_id" => ctx.instructor_course.id
+      })
+
+      conn =
+        put(ctx.conn, ~p"/api/instructors/courses/publish", %{
+          "course_id" => ctx.instructor_course.id
+        })
+
+      assert_bad_request_response(conn, %{"status" => ["Course is already published"]})
+    end
   end
 end

@@ -28,6 +28,12 @@ defmodule Backend.Instructors do
     |> Backend.Repo.update()
   end
 
+  def publish_course(course, attrs) do
+    course
+    |> Backend.Instructors.Schema.Course.publish_changeset(attrs)
+    |> Backend.Repo.update()
+  end
+
   def create_course_module(course, attrs) do
     course
     |> Backend.Instructors.Schema.Course.Module.create_changeset(attrs)
