@@ -30,27 +30,27 @@ defmodule BackendWeb.Router do
     end
 
     scope "/instructors" do
-      put("/create", InstructorsController, :create_instructor)
+      post("/create", InstructorsController, :create_instructor)
 
       scope "/projects" do
-        put("/create", InstructorsController, :create_project)
-        post("/update", InstructorsController, :update_project)
+        post("/create", InstructorsController, :create_project)
+        put("/update", InstructorsController, :update_project)
       end
 
       scope "/courses" do
-        put("/create", InstructorsController, :create_course)
-        post("/update", InstructorsController, :update_course)
-        post("/publish", InstructorsController, :publish_course)
+        post("/create", InstructorsController, :create_course)
+        put("/update", InstructorsController, :update_course)
+        put("/publish", InstructorsController, :publish_course)
 
         scope "/modules" do
-          put("/create", InstructorsController, :create_course_module)
-          post("/update", InstructorsController, :update_course_module)
+          post("/create", InstructorsController, :create_course_module)
+          put("/update", InstructorsController, :update_course_module)
         end
 
         scope "/lessons" do
-          put("/create", InstructorsController, :create_course_lesson)
-          post("/update", InstructorsController, :update_course_lesson)
-          post("/delete", InstructorsController, :delete_course_lesson)
+          post("/create", InstructorsController, :create_course_lesson)
+          put("/update", InstructorsController, :update_course_lesson)
+          put("/delete", InstructorsController, :delete_course_lesson)
         end
       end
     end

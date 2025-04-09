@@ -5,11 +5,11 @@ defmodule BackendWeb.Controllers.InstructorsTest do
     test "create instructor", ctx do
       ctx = ctx |> produce([:user, conn: [:user_session]])
 
-      conn = put(ctx.conn, ~p"/api/instructors/create", %{})
+      conn = post(ctx.conn, ~p"/api/instructors/create", %{})
 
       assert conn.status == 200
 
-      conn = put(ctx.conn, ~p"/api/instructors/create", %{})
+      conn = post(ctx.conn, ~p"/api/instructors/create", %{})
 
       assert_bad_request_response(conn, %{"user_id" => ["has already been taken"]})
     end
@@ -19,11 +19,11 @@ defmodule BackendWeb.Controllers.InstructorsTest do
 
       name = Faker.Company.name()
 
-      conn = put(ctx.conn, ~p"/api/instructors/projects/create", %{"name" => name})
+      conn = post(ctx.conn, ~p"/api/instructors/projects/create", %{"name" => name})
 
       assert conn.status == 200
 
-      conn = put(ctx.conn, ~p"/api/instructors/projects/create", %{"name" => name})
+      conn = post(ctx.conn, ~p"/api/instructors/projects/create", %{"name" => name})
 
       assert_bad_request_response(conn, %{"name" => ["has already been taken"]})
     end
@@ -79,7 +79,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
       project_id = ctx.instructor_project.id
 
       conn =
-        put(ctx.conn, ~p"/api/instructors/courses/create", %{
+        post(ctx.conn, ~p"/api/instructors/courses/create", %{
           "project_id" => project_id,
           "name" => name
         })
@@ -101,7 +101,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
                Jason.decode!(conn.resp_body)
 
       conn =
-        put(ctx.conn, ~p"/api/instructors/courses/create", %{
+        post(ctx.conn, ~p"/api/instructors/courses/create", %{
           "name" => name,
           "project_id" => ctx.instructor_project.id
         })
@@ -109,7 +109,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
       assert_bad_request_response(conn, %{"name" => ["has already been taken"]})
 
       conn =
-        put(ctx.conn, ~p"/api/instructors/courses/create", %{
+        post(ctx.conn, ~p"/api/instructors/courses/create", %{
           "project_id" => project_id,
           "name" => name <> "2",
           "price" => -5.0
@@ -187,7 +187,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
       course_id = ctx.instructor_course.id
 
       conn =
-        put(ctx.conn, ~p"/api/instructors/courses/modules/create", %{
+        post(ctx.conn, ~p"/api/instructors/courses/modules/create", %{
           "course_id" => course_id,
           "title" => "Title",
           "description" => "Description"
@@ -205,7 +205,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
              } = Jason.decode!(conn.resp_body)
 
       conn =
-        put(ctx.conn, ~p"/api/instructors/courses/modules/create", %{
+        post(ctx.conn, ~p"/api/instructors/courses/modules/create", %{
           "course_id" => ctx.instructor_course.id,
           "title" => "Title2",
           "description" => "Description"
@@ -220,7 +220,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
              } = Jason.decode!(conn.resp_body)
 
       conn =
-        put(ctx.conn, ~p"/api/instructors/courses/modules/create", %{
+        post(ctx.conn, ~p"/api/instructors/courses/modules/create", %{
           "course_id" => ctx.instructor_course.id,
           "title" => "Title",
           "description" => "Description"
@@ -288,7 +288,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
       module_id = ctx.instructor_course_module.id
 
       conn =
-        put(ctx.conn, ~p"/api/instructors/courses/lessons/create", %{
+        post(ctx.conn, ~p"/api/instructors/courses/lessons/create", %{
           "module_id" => module_id,
           "title" => "Text Lesson 1",
           "content" => "Content",
@@ -309,7 +309,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
              } = Jason.decode!(conn.resp_body)
 
       conn =
-        put(ctx.conn, ~p"/api/instructors/courses/lessons/create", %{
+        post(ctx.conn, ~p"/api/instructors/courses/lessons/create", %{
           "module_id" => ctx.instructor_course_module.id,
           "title" => "Text Lesson 2",
           "content" => "Description",
@@ -325,7 +325,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
              } = Jason.decode!(conn.resp_body)
 
       conn =
-        put(ctx.conn, ~p"/api/instructors/courses/lessons/create", %{
+        post(ctx.conn, ~p"/api/instructors/courses/lessons/create", %{
           "module_id" => ctx.instructor_course_module.id,
           "title" => "Text Lesson 2",
           "content" => "Content",
@@ -335,7 +335,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
       assert_bad_request_response(conn, %{"title" => ["has already been taken"]})
 
       conn =
-        put(ctx.conn, ~p"/api/instructors/courses/lessons/create", %{
+        post(ctx.conn, ~p"/api/instructors/courses/lessons/create", %{
           "module_id" => ctx.instructor_course_module.id,
           "title" => "Video Lesson 1",
           "type" => "video",
