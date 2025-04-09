@@ -1,6 +1,8 @@
 defmodule BackendWeb.Controllers.UsersTest do
   use BackendWeb.ConnCase, async: true
 
+  @api_users_update_endpoint "/api/users/update"
+
   describe "users" do
     test "update", ctx do
       ctx = ctx |> produce(conn: [:user_session])
@@ -13,7 +15,7 @@ defmodule BackendWeb.Controllers.UsersTest do
         "user_id" => ctx.user.id
       }
 
-      conn = put(ctx.conn, ~p"/api/users/update", data)
+      conn = post(ctx.conn, @api_users_update_endpoint, data)
 
       email = data["email"]
       first_name = data["first_name"]
@@ -38,7 +40,10 @@ defmodule BackendWeb.Controllers.UsersTest do
       ctx2 = ctx |> produce(:user)
 
       conn =
-        put(ctx1.conn, ~p"/api/users/update", %{email: ctx2.user.email, user_id: ctx1.user.id})
+        post(ctx1.conn, @api_users_update_endpoint, %{
+          email: ctx2.user.email,
+          user_id: ctx1.user.id
+        })
 
       assert_bad_request_response(conn, %{"email" => ["has already been taken"]})
     end
@@ -48,7 +53,7 @@ defmodule BackendWeb.Controllers.UsersTest do
       ctx2 = ctx |> produce(:user)
 
       conn =
-        put(ctx1.conn, ~p"/api/users/update", %{
+        post(ctx1.conn, @api_users_update_endpoint, %{
           email: "newemail@gmail.com",
           user_id: ctx2.user.id
         })

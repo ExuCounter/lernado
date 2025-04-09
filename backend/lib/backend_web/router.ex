@@ -21,17 +21,11 @@ defmodule BackendWeb.Router do
     plug(:fetch_session)
   end
 
-  # scope "/", BackendWeb do
-  #   pipe_through(:browser)
-
-  #   get("/", PageController, :home)
-  # end
-
   scope "/api", BackendWeb do
     pipe_through(:api)
 
     scope "/users" do
-      put("/update", UsersController, :update)
+      post("/update", UsersController, :update)
       get("/:user_id", UsersController, :find)
     end
 
@@ -40,23 +34,23 @@ defmodule BackendWeb.Router do
 
       scope "/projects" do
         put("/create", InstructorsController, :create_project)
-        put("/update", InstructorsController, :update_project)
+        post("/update", InstructorsController, :update_project)
       end
 
       scope "/courses" do
         put("/create", InstructorsController, :create_course)
-        put("/update", InstructorsController, :update_course)
-        put("/publish", InstructorsController, :publish_course)
+        post("/update", InstructorsController, :update_course)
+        post("/publish", InstructorsController, :publish_course)
 
         scope "/modules" do
           put("/create", InstructorsController, :create_course_module)
-          put("/update", InstructorsController, :update_course_module)
+          post("/update", InstructorsController, :update_course_module)
         end
 
         scope "/lessons" do
           put("/create", InstructorsController, :create_course_lesson)
-          put("/update", InstructorsController, :update_course_lesson)
-          put("/delete", InstructorsController, :delete_course_lesson)
+          post("/update", InstructorsController, :update_course_lesson)
+          post("/delete", InstructorsController, :delete_course_lesson)
         end
       end
     end
