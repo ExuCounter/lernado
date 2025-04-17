@@ -13,24 +13,6 @@ defmodule Backend.Users do
     |> Backend.Repo.update()
   end
 
-  def verify_user(email, password) do
-    user = Backend.Repo.get_by(Backend.Users.Schema.User, email: email)
-
-    case user do
-      nil ->
-        {:error, "Invalid email or password"}
-
-      user ->
-        case Argon2.verify_pass(password, user.password_hash) do
-          true ->
-            {:ok, user}
-
-          false ->
-            {:error, "Invalid email or password"}
-        end
-    end
-  end
-
   def find_by_id(id) do
     Backend.Repo.get_by(Backend.Users.Schema.User, id: id)
   end

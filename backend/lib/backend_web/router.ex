@@ -17,7 +17,7 @@ defmodule BackendWeb.Router do
   end
 
   pipeline :auth do
-    plug(:accepts, ["html"])
+    plug(:accepts, ["json"])
     plug(:fetch_session)
   end
 

@@ -2,7 +2,6 @@ defmodule BackendWeb.Controllers.AuthTest do
   use BackendWeb.ConnCase, async: true
 
   @api_auth_login_endpoint "/auth/login"
-  @api_auth_register_endpoint "/auth/register"
 
   describe "authentication" do
     test "signs in a user", ctx do
@@ -48,23 +47,31 @@ defmodule BackendWeb.Controllers.AuthTest do
       assert_unauthorized_response(conn, "Invalid email or password")
     end
 
+    @api_auth_register_endpoint "/auth/register"
+
     test "register", ctx do
       ctx = ctx |> produce(conn: [:unauthenticated])
 
+      email = Faker.Internet.email()
+      password = Faker.String.base64()
+      first_name = Faker.Person.first_name()
+      last_name = Faker.Person.last_name()
+
       conn =
         post(ctx.conn, @api_auth_register_endpoint, %{
-          "email" => Faker.Internet.email(),
-          "password" => Faker.String.base64(),
-          "first_name" => Faker.Person.first_name(),
-          "last_name" => Faker.Person.last_name(),
-          "preferred_currency" => Faker.Currency.code()
+          "email" => email,
+          "password" => password,
+          "first_name" => first_name,
+          "last_name" => last_name
         })
-
-      assert_successfull_response(conn)
 
       assert %{
                "data" => %{
-                 "user" => _
+                 "user" => %{
+                   "email" => ^email,
+                   "first_name" => ^first_name,
+                   "last_name" => ^last_name
+                 }
                }
              } =
                Jason.decode!(conn.resp_body)
@@ -76,10 +83,12 @@ defmodule BackendWeb.Controllers.AuthTest do
       conn =
         post(ctx.conn, @api_auth_register_endpoint, %{
           "email" => ctx.user.email,
-          "password" => ctx.user.password
+          "password" => ctx.user.password,
+          "first_name" => Faker.Person.first_name(),
+          "last_name" => Faker.Person.last_name()
         })
 
-      assert_unauthorized_response(conn, "Unauthorized.")
+      assert_bad_request_response(conn, %{"email" => ["has already been taken"]})
     end
   end
 end

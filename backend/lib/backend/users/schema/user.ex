@@ -37,7 +37,9 @@ defmodule Backend.Users.Schema.User do
   end
 
   def create_changeset(attrs) do
-    %__MODULE__{}
+    %__MODULE__{
+      preferred_currency: "USD"
+    }
     |> cast(attrs, [:first_name, :last_name, :password, :email, :preferred_currency])
     |> hash_password()
     |> validate_required([:first_name, :last_name, :email, :password_hash, :preferred_currency])

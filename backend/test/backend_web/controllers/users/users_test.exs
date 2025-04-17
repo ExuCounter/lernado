@@ -7,20 +7,20 @@ defmodule BackendWeb.Controllers.UsersTest do
     test "update", ctx do
       ctx = ctx |> produce(conn: [:user_session])
 
-      data = %{
-        "email" => ctx.user.email,
-        "first_name" => Faker.Person.first_name(),
-        "last_name" => Faker.Person.last_name(),
-        "preferred_currency" => Faker.Currency.code(),
-        "user_id" => ctx.user.id
-      }
+      email = ctx.user.email
+      first_name = Faker.Person.first_name()
+      last_name = Faker.Person.last_name()
+      preferred_currency = Faker.Currency.code()
+      user_id = ctx.user.id
 
-      conn = post(ctx.conn, @api_users_update_endpoint, data)
-
-      email = data["email"]
-      first_name = data["first_name"]
-      last_name = data["last_name"]
-      preferred_currency = data["preferred_currency"]
+      conn =
+        post(ctx.conn, @api_users_update_endpoint, %{
+          email: email,
+          first_name: first_name,
+          last_name: last_name,
+          preferred_currency: preferred_currency,
+          user_id: user_id
+        })
 
       assert %{
                "data" => %{
