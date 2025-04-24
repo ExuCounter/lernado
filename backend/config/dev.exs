@@ -10,6 +10,14 @@ config :backend, Backend.Repo,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
 
+config :backend, :aws,
+  region: System.get_env("AWS_REGION"),
+  access_key_id: System.get_env("AWS_ACCESS_KEY_ID"),
+  secret_access_key: System.get_env("AWS_SECRET_ACCESS_KEY"),
+  session_token: System.get_env("AWS_SESSION_TOKEN"),
+  dispatcher: Module.concat(Backend.AWS.Dispatcher, System.get_env("AWS_DISPATCHER") || "Mock"),
+  bucket: System.get_env("AWS_BUCKET")
+
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #

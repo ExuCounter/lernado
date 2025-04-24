@@ -62,7 +62,9 @@ defmodule Backend.MixProject do
       {:seed_factory, "~> 0.5", only: [:test, :dev]},
       {:faker, "~> 0.18", only: :test},
       {:ecto_enum, "~> 1.4"},
-      {:bodyguard, "~> 2.4"}
+      {:bodyguard, "~> 2.4"},
+      {:aws, "~> 1.0.0"},
+      {:hackney, "~> 1.18"}
     ]
   end
 
