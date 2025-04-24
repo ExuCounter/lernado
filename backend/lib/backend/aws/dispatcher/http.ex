@@ -47,4 +47,43 @@ defmodule Backend.AWS.Dispatcher.HTTP do
       [map_object(contents)]
     end
   end
+
+  defp create_bucket(bucket) do
+    client = client()
+    region = config(:region)
+
+    input = %{
+      "CreateBucketConfiguration" => %{
+        "LocationConstraint" => [region]
+      }
+    }
+
+    case AWS.S3.create_bucket(client, bucket, input) do
+      {:ok, _, _} ->
+        {:ok, bucket}
+
+      {:error, error} ->
+        {:error, error}
+    end
+  end
+
+  defp check_if_bucket_exists?(bucket) do
+    client = client()
+
+    case AWS.S3.head_bucket(client, bucket, %{}) do
+      {:ok, _, _} ->
+        true
+
+      {:error, _} ->
+        false
+    end
+  end
+
+  def create_bucket_if_not_exists(bucket) do
+    if check_if_bucket_exists?(bucket) do
+      {:ok, bucket}
+    else
+      create_bucket(bucket)
+    end
+  end
 end

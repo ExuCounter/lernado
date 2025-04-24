@@ -21,4 +21,8 @@ defmodule Backend.AWS.Dispatcher.Mock do
       }
     ]
   end
+
+  def create_bucket_if_not_exists(_bucket) do
+    {:ok, "my-bucket"}
+  end
 end

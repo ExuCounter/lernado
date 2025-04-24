@@ -16,7 +16,7 @@ config :backend, :aws,
   secret_access_key: System.get_env("AWS_SECRET_ACCESS_KEY"),
   session_token: System.get_env("AWS_SESSION_TOKEN"),
   dispatcher: Module.concat(Backend.AWS.Dispatcher, System.get_env("AWS_DISPATCHER") || "Mock"),
-  bucket: System.get_env("AWS_BUCKET")
+  courses_bucket: System.get_env("AWS_COURSES_BUCKET")
 
 # For development, we disable any cache and enable
 # debugging and code reloading.
