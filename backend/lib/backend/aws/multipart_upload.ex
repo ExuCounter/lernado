@@ -1,17 +1,40 @@
 defmodule Backend.AWS.MultipartUpload do
   require Logger
 
+  @type part :: %{
+          etag: String.t(),
+          part_number: integer()
+        }
+
+  @type aws_error :: {:unexpected_response, any()} | term()
+
+  @spec init_upload(%{
+          client: map(),
+          bucket: String.t(),
+          filename: String.t(),
+          key: String.t()
+        }) :: {:ok, String.t()} | {:error, aws_error()}
   defp init_upload(%{
          client: client,
          bucket: bucket,
          key: key
        }) do
-    {:ok, %{"InitiateMultipartUploadResult" => %{"UploadId" => upload_id}}, _} =
-      AWS.S3.create_multipart_upload(client, bucket, key, %{})
-
-    upload_id
+    with {:ok, %{"InitiateMultipartUploadResult" => %{"UploadId" => upload_id}}, _} <-
+           AWS.S3.create_multipart_upload(client, bucket, key, %{}) do
+      {:ok, upload_id}
+    else
+      {:error, reason} -> {:error, reason}
+    end
   end
 
+  @spec complete_upload(%{
+          client: map(),
+          bucket: String.t(),
+          filename: String.t(),
+          key: String.t(),
+          upload_id: String.t(),
+          parts: list(part())
+        }) :: {:ok, term()} | {:error, aws_error()}
   defp complete_upload(%{
          client: client,
          bucket: bucket,
@@ -19,11 +42,38 @@ defmodule Backend.AWS.MultipartUpload do
          upload_id: upload_id,
          parts: parts
        }) do
-    input = %{"CompleteMultipartUpload" => %{"Part" => parts}, "UploadId" => upload_id}
+    parts_input =
+      Enum.map(parts, fn
+        %{etag: etag, part_number: part_number} ->
+          %{
+            "ETag" => etag,
+            "PartNumber" => part_number
+          }
+      end)
 
-    AWS.S3.complete_multipart_upload(client, bucket, key, input)
+    input = %{"CompleteMultipartUpload" => %{"Part" => parts_input}, "UploadId" => upload_id}
+
+    with {:ok, _, _} <- AWS.S3.complete_multipart_upload(client, bucket, key, input) do
+      {:ok, :completed}
+    else
+      {:error, reason} ->
+        Logger.error("Multipart upload failed for #{key}. Reason: #{reason}")
+
+        abort_upload(%{
+          client: client,
+          bucket: bucket,
+          key: key,
+          upload_id: upload_id
+        })
+    end
   end
 
+  @spec complete_upload(%{
+          client: map(),
+          bucket: String.t(),
+          filename: String.t(),
+          upload_id: String.t()
+        }) :: {:ok, term()} | {:error, aws_error()}
   defp abort_upload(%{
          client: client,
          bucket: bucket,
@@ -32,13 +82,25 @@ defmodule Backend.AWS.MultipartUpload do
        }) do
     input = %{"uploadId" => upload_id, "Key" => key}
 
-    AWS.S3.abort_multipart_upload(client, bucket, key, input)
-
-    Logger.info("Multipart upload aborted for #{key}.")
-
-    {:error, :aborted}
+    with {:ok, _, _} <- AWS.S3.abort_multipart_upload(client, bucket, key, input) do
+      Logger.info("Multipart upload aborted for #{key}.")
+      {:ok, :aborted}
+    else
+      {:error, reason} ->
+        Logger.error("Multipart upload abort failed for #{key}.")
+        {:error, reason}
+    end
   end
 
+  @spec upload_part(%{
+          client: map(),
+          bucket: String.t(),
+          filename: String.t(),
+          upload_id: String.t(),
+          key: String.t(),
+          part_number: pos_integer(),
+          chunk: binary()
+        }) :: {:ok, list(part())} | {:error, aws_error()}
   defp upload_part(%{
          client: client,
          bucket: bucket,
@@ -55,6 +117,8 @@ defmodule Backend.AWS.MultipartUpload do
            }) do
       {_, etag} = Enum.find(headers, fn {header, _} -> header == "ETag" end)
 
+      Logger.info("Multipart upload key: #{key}. Part #{part_number} completed successfully.")
+
       {:ok,
        %{
          etag: etag,
@@ -66,17 +130,26 @@ defmodule Backend.AWS.MultipartUpload do
     end
   end
 
-  def upload_part_retry(
-        %{
-          client: client,
-          bucket: bucket,
-          key: key,
-          part_number: part_number,
-          chunk: chunk,
-          upload_id: upload_id
-        },
-        opts \\ []
-      ) do
+  @spec upload_part(%{
+          client: map(),
+          bucket: String.t(),
+          filename: String.t(),
+          upload_id: String.t(),
+          key: String.t(),
+          part_number: pos_integer(),
+          chunk: binary()
+        }) :: {:ok, list(part())} | {:error, aws_error()}
+  defp upload_part_retry(
+         %{
+           client: client,
+           bucket: bucket,
+           key: key,
+           part_number: part_number,
+           chunk: chunk,
+           upload_id: upload_id
+         },
+         opts \\ []
+       ) do
     max_attempts = Keyword.get(opts, :max_attempts, 5)
 
     Enum.reduce_while(1..max_attempts, nil, fn attempt, _ ->
@@ -109,57 +182,54 @@ defmodule Backend.AWS.MultipartUpload do
   # 5 MB
   @chunk_size 5 * 1024 * 1024
 
-  def upload(%{
-        client: client,
-        bucket: bucket,
-        filename: filename,
-        key: key
-      }) do
-    upload_id =
-      init_upload(%{
-        client: client,
-        bucket: bucket,
-        filename: filename,
-        key: key
-      })
+  defp has_invalid_parts?(parts) do
+    Enum.any?(parts, fn
+      {:error, _} -> true
+      _ -> false
+    end)
+  end
 
-    stream =
+  # 120 seconds
+  @upload_timeout 120 * 1000
+
+  @spec upload_part(%{
+          client: map(),
+          bucket: String.t(),
+          filename: String.t(),
+          key: String.t(),
+          upload_id: String.t()
+        }) :: {:ok, list(part())} | {:error, aws_error()}
+  defp upload_parts(%{
+         client: client,
+         bucket: bucket,
+         filename: filename,
+         key: key,
+         upload_id: upload_id
+       }) do
+    parts =
       filename
       |> File.stream!(@chunk_size)
       |> Stream.with_index(1)
       |> Task.async_stream(
         fn {chunk, index} ->
-          result =
-            upload_part(%{
-              client: client,
-              bucket: bucket,
-              key: key,
-              part_number: index,
-              chunk: chunk,
-              upload_id: upload_id
-            })
-
-          Logger.info("Multipart upload key: #{key}. Part #{index} completed successfully.")
-
-          result
+          upload_part_retry(%{
+            client: client,
+            bucket: bucket,
+            key: key,
+            part_number: index,
+            chunk: chunk,
+            upload_id: upload_id
+          })
         end,
-        timeout: 120 * 1000
+        timeout: @upload_timeout
       )
-
-    parts =
-      Enum.map(stream, fn
-        {:ok, result} -> result
+      |> Enum.map(fn
+        {:ok, {:ok, result}} -> result
         {:exit, reason} -> {:error, reason}
       end)
 
-    has_upload_errors? =
-      Enum.any?(parts, fn
-        {:error, _} -> true
-        _ -> false
-      end)
-
-    if has_upload_errors? do
-      Logger.error("Multipart upload failed for #{key}. Aborting upload...")
+    if has_invalid_parts?(parts) do
+      Logger.error("Multipart upload failed for #{key}.")
 
       abort_upload(%{
         client: client,
@@ -168,20 +238,43 @@ defmodule Backend.AWS.MultipartUpload do
         upload_id: upload_id
       })
     else
-      parts =
-        Enum.map(parts, fn {:ok, %{etag: etag, part_number: part_number}} ->
-          %{
-            "ETag" => etag,
-            "PartNumber" => part_number
-          }
-        end)
+      {:ok, parts}
+    end
+  end
 
+  @spec upload_part(%{
+          client: map(),
+          bucket: String.t(),
+          filename: String.t(),
+          key: String.t()
+        }) :: {:ok, term()} | {:error, aws_error()}
+  def upload(%{
+        client: client,
+        bucket: bucket,
+        filename: filename,
+        key: key
+      }) do
+    with {:ok, upload_id} <-
+           init_upload(%{
+             client: client,
+             bucket: bucket,
+             filename: filename,
+             key: key
+           }),
+         {:ok, parts} <-
+           upload_parts(%{
+             client: client,
+             bucket: bucket,
+             filename: filename,
+             upload_id: upload_id,
+             key: key
+           }) do
       complete_upload(%{
         client: client,
         bucket: bucket,
-        key: key,
         upload_id: upload_id,
-        parts: parts
+        parts: parts,
+        key: key
       })
     end
   end
