@@ -123,23 +123,33 @@ defmodule Backend.AWS.MultipartUpload do
         key: key
       })
 
-    parts =
+    stream =
       filename
-      |> File.read!()
-      |> String.codepoints()
-      |> Stream.chunk_every(@chunk_size)
+      |> File.stream!(@chunk_size)
       |> Stream.with_index(1)
-      |> Enum.map(fn {chunk, index} ->
-        chunk = Enum.join(chunk)
+      |> Task.async_stream(
+        fn {chunk, index} ->
+          result =
+            upload_part(%{
+              client: client,
+              bucket: bucket,
+              key: key,
+              part_number: index,
+              chunk: chunk,
+              upload_id: upload_id
+            })
 
-        upload_part_retry(%{
-          client: client,
-          bucket: bucket,
-          key: key,
-          part_number: index,
-          chunk: chunk,
-          upload_id: upload_id
-        })
+          Logger.info("Multipart upload key: #{key}. Part #{index} completed successfully.")
+
+          result
+        end,
+        timeout: 120 * 1000
+      )
+
+    parts =
+      Enum.map(stream, fn
+        {:ok, result} -> result
+        {:exit, reason} -> {:error, reason}
       end)
 
     has_upload_errors? =

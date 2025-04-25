@@ -1,4 +1,5 @@
 defmodule Backend.AWS.Dispatcher.HTTP do
+  require Logger
   @behaviour Backend.AWS.Dispatcher
 
   defp config(key) do
@@ -17,12 +18,19 @@ defmodule Backend.AWS.Dispatcher.HTTP do
   def multipart_upload(bucket, key, filename) do
     client = client()
 
-    Backend.AWS.MultipartUpload.upload(%{
-      client: client,
-      bucket: bucket,
-      key: key,
-      filename: filename
-    })
+    {time, result} =
+      :timer.tc(fn ->
+        Backend.AWS.MultipartUpload.upload(%{
+          client: client,
+          bucket: bucket,
+          key: key,
+          filename: filename
+        })
+      end)
+
+    Logger.info("Upload completed in #{time / 1_000} ms")
+
+    result
   end
 
   defp map_object(%{
