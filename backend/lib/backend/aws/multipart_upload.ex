@@ -8,6 +8,13 @@ defmodule Backend.AWS.MultipartUpload do
 
   @type aws_error :: {:unexpected_response, any()} | term()
 
+  def get_mime_type_from_filename(filename) do
+    filename
+    |> Path.extname()
+    |> String.trim_leading(".")
+    |> MIME.type()
+  end
+
   @spec init_upload(%{
           client: map(),
           bucket: String.t(),
@@ -20,7 +27,9 @@ defmodule Backend.AWS.MultipartUpload do
          key: key
        }) do
     with {:ok, %{"InitiateMultipartUploadResult" => %{"UploadId" => upload_id}}, _} <-
-           AWS.S3.create_multipart_upload(client, bucket, key, %{}) do
+           AWS.S3.create_multipart_upload(client, bucket, key, %{
+             "ContentType" => get_mime_type_from_filename(key)
+           }) do
       {:ok, upload_id}
     else
       {:error, reason} -> {:error, reason}
@@ -30,7 +39,6 @@ defmodule Backend.AWS.MultipartUpload do
   @spec complete_upload(%{
           client: map(),
           bucket: String.t(),
-          filename: String.t(),
           key: String.t(),
           upload_id: String.t(),
           parts: list(part())
