@@ -167,9 +167,9 @@ defmodule Backend.Instructors do
   end
 
   def upload_course_lesson_video(lesson, %{path: path, filename: filename} = _params) do
-    course = Backend.Repo.preload(lesson, module: :course)
+    lesson = Backend.Repo.preload(lesson, module: :course)
 
-    with {:ok, video_url} <- upload_video(course, path, filename),
+    with {:ok, video_url} <- upload_video(lesson.module.course, path, filename),
          {:ok, lesson} <- update_course_lesson(lesson, %{video_url: video_url}) do
       {:ok, lesson}
     end

@@ -7,18 +7,18 @@ defmodule Backend.Application do
 
   @impl true
   def start(_type, _args) do
-    courses_bucket = Keyword.fetch!(Application.get_env(:backend, :aws), :courses_bucket)
+    # courses_bucket = Keyword.fetch!(Application.get_env(:backend, :aws), :courses_bucket)
 
     children = [
       BackendWeb.Telemetry,
       Backend.Repo,
       {DNSCluster, query: Application.get_env(:backend, :dns_cluster_query) || :ignore},
-      {
-        Backend.AWS.BucketsManager,
-        %{
-          create_if_not_exists: [courses_bucket]
-        }
-      },
+      # {
+      #   Backend.AWS.BucketsManager,
+      #   %{
+      #     create_if_not_exists: [courses_bucket]
+      #   }
+      # },
       {Phoenix.PubSub, name: Backend.PubSub},
       # Start the Finch HTTP client for sending emails
       {Finch, name: Backend.Finch},

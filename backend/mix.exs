@@ -64,7 +64,8 @@ defmodule Backend.MixProject do
       {:ecto_enum, "~> 1.4"},
       {:bodyguard, "~> 2.4"},
       {:aws, "~> 1.0.0"},
-      {:hackney, "~> 1.18"}
+      {:hackney, "~> 1.18"},
+      {:hammox, "~> 0.7", only: :test}
     ]
   end
 

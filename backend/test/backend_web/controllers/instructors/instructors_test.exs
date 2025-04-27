@@ -544,16 +544,27 @@ defmodule BackendWeb.Controllers.InstructorsTest do
   test "update course lesson video", ctx do
     ctx = ctx |> exec(:create_course_lesson, type: :video) |> produce(conn: [:user_session])
 
-    upload = %Plug.Upload{
+    upload_data = %Plug.Upload{
       path: "test/fixtures/dummy.mp4",
       filename: "dummy.mp4",
       content_type: "video/mp4"
     }
 
+    expect(
+      Backend.AWS.DispatcherMock,
+      :multipart_upload,
+      fn _bucket, key, path ->
+        assert key == "courses/#{ctx.instructor_course.id}/videos/dummy.mp4"
+        assert path == "test/fixtures/dummy.mp4"
+
+        {:ok, "https://aws.amazon.com/#{key}"}
+      end
+    )
+
     conn =
       post(ctx.conn, ~p"/api/instructors/courses/videos/upload", %{
         "lesson_id" => ctx.instructor_course_lesson.id,
-        "video" => upload
+        "video" => upload_data
       })
 
     assert %{
