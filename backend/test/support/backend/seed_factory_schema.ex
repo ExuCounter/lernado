@@ -29,49 +29,49 @@ defmodule Backend.SeedFactorySchema do
     produce(:instructor)
   end
 
-  command :create_instructor_project do
+  command :create_project do
     param(:instructor, entity: :instructor)
     param(:name, generate: &Faker.Lorem.sentence/0)
 
     resolve(fn args ->
       with {:ok, project} <- args.instructor |> Backend.Instructors.create_project(args) do
-        {:ok, %{instructor_project: project}}
+        {:ok, %{project: project}}
       end
     end)
 
-    produce(:instructor_project)
+    produce(:project)
   end
 
-  command :create_instructor_course do
-    param(:project, entity: :instructor_project)
+  command :create_course do
+    param(:project, entity: :project)
     param(:name, generate: &Faker.Company.name/0)
 
     resolve(fn args ->
       with {:ok, course} <- args.project |> Backend.Instructors.create_course(args) do
-        {:ok, %{instructor_course: course}}
+        {:ok, %{course: course}}
       end
     end)
 
-    produce(:instructor_course)
+    produce(:course)
   end
 
   command :create_course_module do
-    param(:course, entity: :instructor_course)
+    param(:course, entity: :course)
     param(:title, generate: &Faker.Lorem.sentence/0)
     param(:description, generate: &Faker.Lorem.paragraph/0)
 
     resolve(fn args ->
       with {:ok, course_module} <-
              args.course |> Backend.Instructors.create_course_module(args) do
-        {:ok, %{instructor_course_module: course_module}}
+        {:ok, %{course_module: course_module}}
       end
     end)
 
-    produce(:instructor_course_module)
+    produce(:course_module)
   end
 
   command :create_course_lesson do
-    param(:module, entity: :instructor_course_module)
+    param(:module, entity: :course_module)
     param(:title, generate: &Faker.Lorem.sentence/0)
     param(:description, generate: &Faker.Lorem.paragraph/0)
     param(:type, value: :text)
@@ -81,10 +81,10 @@ defmodule Backend.SeedFactorySchema do
     resolve(fn args ->
       with {:ok, course_lesson} <-
              args.module |> Backend.Instructors.create_course_lesson(args) do
-        {:ok, %{instructor_course_lesson: course_lesson}}
+        {:ok, %{course_lesson: course_lesson}}
       end
     end)
 
-    produce(:instructor_course_lesson)
+    produce(:course_lesson)
   end
 end

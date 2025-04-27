@@ -4,7 +4,7 @@ defmodule Backend.Instructors.Schema.Course.Lesson.Text do
 
   @derive {Jason.Encoder, only: [:id, :content, :inserted_at, :updated_at]}
   @primary_key {:id, :binary_id, autogenerate: true}
-  schema "instructor_course_lesson_texts" do
+  schema "course_lesson_texts" do
     field :content, :string
 
     belongs_to :lesson, Backend.Instructors.Schema.Course.Lesson, type: :binary_id

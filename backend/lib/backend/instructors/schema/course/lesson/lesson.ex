@@ -15,7 +15,7 @@ defmodule Backend.Instructors.Schema.Course.Lesson do
              :updated_at
            ]}
   @primary_key {:id, :binary_id, autogenerate: true}
-  schema "instructor_course_lessons" do
+  schema "course_lessons" do
     field :title, :string
     field :order_index, :integer
     field :type, Backend.Instructors.Course.Lesson.Type

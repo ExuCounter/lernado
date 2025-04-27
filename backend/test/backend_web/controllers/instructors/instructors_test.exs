@@ -29,13 +29,13 @@ defmodule BackendWeb.Controllers.InstructorsTest do
     end
 
     test "update own project", ctx do
-      ctx = ctx |> produce([:user, :instructor, :instructor_project, conn: [:user_session]])
+      ctx = ctx |> produce([:user, :instructor, :project, conn: [:user_session]])
 
       name = Faker.Company.name()
 
       conn =
         put(ctx.conn, ~p"/api/instructors/projects/update", %{
-          "project_id" => ctx.instructor_project.id,
+          "project_id" => ctx.project.id,
           "name" => name
         })
 
@@ -52,7 +52,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
 
       conn =
         put(ctx.conn, ~p"/api/instructors/projects/update", %{
-          "project_id" => ctx.instructor_project.id,
+          "project_id" => ctx.project.id,
           "name" => "short"
         })
 
@@ -60,23 +60,23 @@ defmodule BackendWeb.Controllers.InstructorsTest do
     end
 
     test "update stranger project", ctx do
-      ctx1 = ctx |> produce([:user, :instructor, :instructor_project])
+      ctx1 = ctx |> produce([:user, :instructor, :project])
       ctx2 = ctx |> produce([:user, :instructor, conn: [:user_session]])
 
       conn =
         put(ctx2.conn, ~p"/api/instructors/projects/update", %{
           "name" => Faker.Company.name(),
-          "project_id" => ctx1.instructor_project.id
+          "project_id" => ctx1.project.id
         })
 
       assert_forbidden_response(conn)
     end
 
     test "create course", ctx do
-      ctx = ctx |> produce([:user, :instructor, :instructor_project, conn: [:user_session]])
+      ctx = ctx |> produce([:user, :instructor, :project, conn: [:user_session]])
 
       name = Faker.Company.name()
-      project_id = ctx.instructor_project.id
+      project_id = ctx.project.id
 
       conn =
         post(ctx.conn, ~p"/api/instructors/courses/create", %{
@@ -103,7 +103,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
       conn =
         post(ctx.conn, ~p"/api/instructors/courses/create", %{
           "name" => name,
-          "project_id" => ctx.instructor_project.id
+          "project_id" => ctx.project.id
         })
 
       assert_bad_request_response(conn, %{"name" => ["has already been taken"]})
@@ -124,14 +124,14 @@ defmodule BackendWeb.Controllers.InstructorsTest do
         |> produce([
           :user,
           :instructor,
-          :instructor_project,
-          :instructor_course,
+          :project,
+          :course,
           conn: [:user_session]
         ])
 
       conn =
         put(ctx.conn, ~p"/api/instructors/courses/update", %{
-          "course_id" => ctx.instructor_course.id,
+          "course_id" => ctx.course.id,
           "name" => Faker.Company.name(),
           "price" => -5.0
         })
@@ -145,8 +145,8 @@ defmodule BackendWeb.Controllers.InstructorsTest do
         |> produce([
           :user,
           :instructor,
-          :instructor_project,
-          :instructor_course,
+          :project,
+          :course,
           conn: [:user_session]
         ])
 
@@ -161,12 +161,12 @@ defmodule BackendWeb.Controllers.InstructorsTest do
     end
 
     test "update stanger course", ctx do
-      ctx1 = ctx |> produce([:user, :instructor, :instructor_project, :instructor_course])
+      ctx1 = ctx |> produce([:user, :instructor, :project, :course])
       ctx2 = ctx |> produce([:user, conn: [:user_session]])
 
       conn =
         put(ctx2.conn, ~p"/api/instructors/courses/update", %{
-          "course_id" => ctx1.instructor_course.id,
+          "course_id" => ctx1.course.id,
           "name" => Faker.Company.name()
         })
 
@@ -179,12 +179,12 @@ defmodule BackendWeb.Controllers.InstructorsTest do
         |> produce([
           :user,
           :instructor,
-          :instructor_project,
-          :instructor_course,
+          :project,
+          :course,
           conn: [:user_session]
         ])
 
-      course_id = ctx.instructor_course.id
+      course_id = ctx.course.id
 
       conn =
         post(ctx.conn, ~p"/api/instructors/courses/modules/create", %{
@@ -206,7 +206,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
 
       conn =
         post(ctx.conn, ~p"/api/instructors/courses/modules/create", %{
-          "course_id" => ctx.instructor_course.id,
+          "course_id" => ctx.course.id,
           "title" => "Title2",
           "description" => "Description"
         })
@@ -221,7 +221,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
 
       conn =
         post(ctx.conn, ~p"/api/instructors/courses/modules/create", %{
-          "course_id" => ctx.instructor_course.id,
+          "course_id" => ctx.course.id,
           "title" => "Title",
           "description" => "Description"
         })
@@ -235,8 +235,8 @@ defmodule BackendWeb.Controllers.InstructorsTest do
         |> produce([
           :user,
           :instructor,
-          :instructor_project,
-          :instructor_course,
+          :project,
+          :course,
           conn: [:user_session]
         ])
 
@@ -256,16 +256,16 @@ defmodule BackendWeb.Controllers.InstructorsTest do
         |> produce([
           :user,
           :instructor,
-          :instructor_project,
-          :instructor_course,
-          :instructor_course_module
+          :project,
+          :course,
+          :course_module
         ])
 
       ctx2 = ctx |> produce([:user, conn: [:user_session]])
 
       conn =
         put(ctx2.conn, ~p"/api/instructors/courses/modules/update", %{
-          "module_id" => ctx1.instructor_course_module.id,
+          "module_id" => ctx1.course_module.id,
           "title" => "Title",
           "description" => "Description"
         })
@@ -279,13 +279,13 @@ defmodule BackendWeb.Controllers.InstructorsTest do
         |> produce([
           :user,
           :instructor,
-          :instructor_project,
-          :instructor_course,
-          :instructor_course_module,
+          :project,
+          :course,
+          :course_module,
           conn: [:user_session]
         ])
 
-      module_id = ctx.instructor_course_module.id
+      module_id = ctx.course_module.id
 
       conn =
         post(ctx.conn, ~p"/api/instructors/courses/lessons/create", %{
@@ -310,7 +310,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
 
       conn =
         post(ctx.conn, ~p"/api/instructors/courses/lessons/create", %{
-          "module_id" => ctx.instructor_course_module.id,
+          "module_id" => ctx.course_module.id,
           "title" => "Text Lesson 2",
           "content" => "Description",
           "type" => "text"
@@ -326,7 +326,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
 
       conn =
         post(ctx.conn, ~p"/api/instructors/courses/lessons/create", %{
-          "module_id" => ctx.instructor_course_module.id,
+          "module_id" => ctx.course_module.id,
           "title" => "Text Lesson 2",
           "content" => "Content",
           "type" => "text"
@@ -336,7 +336,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
 
       conn =
         post(ctx.conn, ~p"/api/instructors/courses/lessons/create", %{
-          "module_id" => ctx.instructor_course_module.id,
+          "module_id" => ctx.course_module.id,
           "title" => "Video Lesson 1",
           "type" => "video",
           "video_url" => "https://youtube.com/video"
@@ -362,9 +362,9 @@ defmodule BackendWeb.Controllers.InstructorsTest do
         |> produce([
           :user,
           :instructor,
-          :instructor_project,
-          :instructor_course,
-          :instructor_course_module,
+          :project,
+          :course,
+          :course_module,
           conn: [:user_session]
         ])
 
@@ -385,17 +385,17 @@ defmodule BackendWeb.Controllers.InstructorsTest do
         |> produce([
           :user,
           :instructor,
-          :instructor_project,
-          :instructor_course,
-          :instructor_course_module,
-          :instructor_course_lesson
+          :project,
+          :course,
+          :course_module,
+          :course_lesson
         ])
 
       ctx2 = ctx |> produce([:user, conn: [:user_session]])
 
       conn =
         put(ctx2.conn, ~p"/api/instructors/courses/lessons/update", %{
-          "lesson_id" => ctx1.instructor_course_lesson.id,
+          "lesson_id" => ctx1.course_lesson.id,
           "title" => "Text Lesson 1",
           "content" => "Content",
           "type" => "text"
@@ -410,16 +410,16 @@ defmodule BackendWeb.Controllers.InstructorsTest do
         |> produce([
           :user,
           :instructor,
-          :instructor_project,
-          :instructor_course,
-          :instructor_course_module,
-          :instructor_course_lesson,
+          :project,
+          :course,
+          :course_module,
+          :course_lesson,
           conn: [:user_session]
         ])
 
       conn =
         put(ctx.conn, ~p"/api/instructors/courses/lessons/update", %{
-          "lesson_id" => ctx.instructor_course_lesson.id,
+          "lesson_id" => ctx.course_lesson.id,
           "title" => "Text Lesson 1",
           "type" => "video",
           "video_url" => "https://youtube.com/video"
@@ -446,16 +446,16 @@ defmodule BackendWeb.Controllers.InstructorsTest do
         |> produce([
           :user,
           :instructor,
-          :instructor_project,
-          :instructor_course,
-          :instructor_course_module,
-          :instructor_course_lesson,
+          :project,
+          :course,
+          :course_module,
+          :course_lesson,
           conn: [:user_session]
         ])
 
       conn =
         put(ctx.conn, ~p"/api/instructors/courses/lessons/delete", %{
-          "lesson_id" => ctx.instructor_course_lesson.id
+          "lesson_id" => ctx.course_lesson.id
         })
 
       assert_successfull_response(conn)
@@ -467,23 +467,23 @@ defmodule BackendWeb.Controllers.InstructorsTest do
         |> produce([
           :user,
           :instructor,
-          :instructor_project,
-          :instructor_course,
+          :project,
+          :course,
           conn: [:user_session]
         ])
 
       conn =
         put(ctx.conn, ~p"/api/instructors/courses/publish", %{
-          "course_id" => ctx.instructor_course.id
+          "course_id" => ctx.course.id
         })
 
       assert_bad_request_response(conn, %{"public_path" => ["can't be blank"]})
 
-      Backend.Instructors.update_course(ctx.instructor_course, %{public_path: "course_path"})
+      Backend.Instructors.update_course(ctx.course, %{public_path: "course_path"})
 
       conn =
         put(ctx.conn, ~p"/api/instructors/courses/publish", %{
-          "course_id" => ctx.instructor_course.id
+          "course_id" => ctx.course.id
         })
 
       assert %{
@@ -501,15 +501,15 @@ defmodule BackendWeb.Controllers.InstructorsTest do
         |> produce([
           :user,
           :instructor,
-          :instructor_project,
-          :instructor_course
+          :project,
+          :course
         ])
 
       ctx2 = ctx |> produce([:user, conn: [:user_session]])
 
       conn =
         put(ctx2.conn, ~p"/api/instructors/courses/publish", %{
-          "course_id" => ctx1.instructor_course.id
+          "course_id" => ctx1.course.id
         })
 
       assert_forbidden_response(conn)
@@ -521,20 +521,20 @@ defmodule BackendWeb.Controllers.InstructorsTest do
         |> produce([
           :user,
           :instructor,
-          :instructor_project,
-          :instructor_course,
+          :project,
+          :course,
           conn: [:user_session]
         ])
 
-      Backend.Instructors.update_course(ctx.instructor_course, %{public_path: "course_path"})
+      Backend.Instructors.update_course(ctx.course, %{public_path: "course_path"})
 
       put(ctx.conn, ~p"/api/instructors/courses/publish", %{
-        "course_id" => ctx.instructor_course.id
+        "course_id" => ctx.course.id
       })
 
       conn =
         put(ctx.conn, ~p"/api/instructors/courses/publish", %{
-          "course_id" => ctx.instructor_course.id
+          "course_id" => ctx.course.id
         })
 
       assert_bad_request_response(conn, %{"status" => ["Course is already published"]})
@@ -554,7 +554,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
       Backend.AWS.DispatcherMock,
       :multipart_upload,
       fn _bucket, key, path ->
-        assert key == "courses/#{ctx.instructor_course.id}/videos/dummy.mp4"
+        assert key == "courses/#{ctx.course.id}/videos/dummy.mp4"
         assert path == "test/fixtures/dummy.mp4"
 
         {:ok, "https://aws.amazon.com/#{key}"}
@@ -563,7 +563,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
 
     conn =
       post(ctx.conn, ~p"/api/instructors/courses/videos/upload", %{
-        "lesson_id" => ctx.instructor_course_lesson.id,
+        "lesson_id" => ctx.course_lesson.id,
         "video" => upload_data
       })
 

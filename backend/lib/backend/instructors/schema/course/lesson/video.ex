@@ -4,7 +4,7 @@ defmodule Backend.Instructors.Schema.Course.Lesson.Video do
 
   @derive {Jason.Encoder, only: [:id, :description, :video_url, :inserted_at, :updated_at]}
   @primary_key {:id, :binary_id, autogenerate: true}
-  schema "instructor_course_lesson_videos" do
+  schema "course_lesson_videos" do
     field :description, :string
     field :video_url, :string
 

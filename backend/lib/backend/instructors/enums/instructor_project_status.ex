@@ -1,6 +1,6 @@
 defmodule Backend.Instructors.InstructorProjectStatus do
   use EctoEnum,
-    type: :instructor_project_status,
+    type: :project_status,
     enums: [
       :draft,
       :published,

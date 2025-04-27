@@ -4,7 +4,7 @@ defmodule Backend.Instructors.Schema.Project do
 
   @derive {Jason.Encoder, only: [:id, :name, :inserted_at, :updated_at]}
   @primary_key {:id, :binary_id, autogenerate: true}
-  schema "instructor_projects" do
+  schema "projects" do
     field :name, :string
 
     belongs_to :instructor, Backend.Instructors.Schema.Instructor, type: :binary_id

@@ -5,7 +5,7 @@ defmodule Backend.Instructors.Schema.Course.Module do
   @derive {Jason.Encoder,
            only: [:id, :title, :description, :order_index, :course, :inserted_at, :updated_at]}
   @primary_key {:id, :binary_id, autogenerate: true}
-  schema "instructor_course_modules" do
+  schema "course_modules" do
     field :title, :string
     field :description, :string
     field :order_index, :integer
