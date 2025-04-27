@@ -2,15 +2,33 @@ defmodule Backend.AWS.BucketsManager do
   use GenServer
   require Logger
 
-  def start_link(initial_state) do
-    GenServer.start_link(__MODULE__, initial_state, name: __MODULE__)
+  def config(key) do
+    Keyword.fetch(Application.get_env(:backend, :aws), key)
   end
 
-  def init(%{create_if_not_exists: create_if_not_exists} = initial_state) do
-    for bucket <- create_if_not_exists do
+  def start_link(_initial_state) do
+    buckets = []
+
+    buckets =
+      case config(:courses_bucket) do
+        {:ok, bucket} ->
+          buckets ++ [bucket]
+
+        :error ->
+          buckets
+      end
+
+    GenServer.start_link(__MODULE__, buckets, name: __MODULE__)
+  end
+
+  def init(buckets) do
+    for bucket <- buckets do
       case Backend.AWS.create_bucket_if_not_exists(bucket) do
-        {:ok, _} ->
-          Logger.info("Bucket #{bucket} created or already exists.")
+        {:ok, :already_exists} ->
+          :ok
+
+        {:ok, bucket} ->
+          Logger.info("AWS Bucket \"#{bucket}\" created.")
           :ok
 
         {:error, reason} ->
@@ -19,6 +37,6 @@ defmodule Backend.AWS.BucketsManager do
       end
     end
 
-    {:ok, initial_state}
+    {:ok, buckets}
   end
 end

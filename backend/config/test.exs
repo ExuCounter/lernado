@@ -14,7 +14,7 @@ config :backend, Backend.Repo,
   pool_size: System.schedulers_online() * 2
 
 config :backend, :aws,
-  dispatcher: Backend.AWS.Dispatcher.Mock,
+  dispatcher: Backend.AWS.DispatcherMock,
   courses_bucket: "dummy_bucket"
 
 # We don't run a server during test. If one is required,

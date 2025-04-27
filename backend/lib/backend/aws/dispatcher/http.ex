@@ -89,7 +89,7 @@ defmodule Backend.AWS.DispatcherHTTP do
 
   def create_bucket_if_not_exists(bucket) do
     if check_if_bucket_exists?(bucket) do
-      {:ok, bucket}
+      {:ok, :already_exists}
     else
       create_bucket(bucket)
     end
