@@ -114,7 +114,14 @@ defmodule Backend.Instructors do
 
   def update_course_lesson(lesson, attrs) do
     current_lesson_type = lesson.type
-    incoming_lesson_type = Map.get(attrs, "type") |> :erlang.binary_to_atom()
+
+    incoming_lesson_type =
+      if is_binary(attrs["type"]) do
+        String.to_existing_atom(attrs["type"])
+      else
+        lesson.type || current_lesson_type
+      end
+
     lesson_type_changed? = current_lesson_type != incoming_lesson_type
 
     multi =
@@ -150,6 +157,21 @@ defmodule Backend.Instructors do
         {:ok, %{lesson: lesson}} -> {:ok, lesson}
         {:error, _, changeset, _changes} -> {:error, changeset}
       end
+    end
+  end
+
+  def upload_video(course, path, filename) do
+    key = "courses/#{course.id}/videos/#{filename}"
+
+    Backend.AWS.Courses.multipart_upload(key, path)
+  end
+
+  def upload_course_lesson_video(lesson, %{path: path, filename: filename} = _params) do
+    course = Backend.Repo.preload(lesson, module: :course)
+
+    with {:ok, video_url} <- upload_video(course, path, filename),
+         {:ok, lesson} <- update_course_lesson(lesson, %{video_url: video_url}) do
+      {:ok, lesson}
     end
   end
 end

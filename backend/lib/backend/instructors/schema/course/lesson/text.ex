@@ -18,13 +18,10 @@ defmodule Backend.Instructors.Schema.Course.Lesson.Text do
       lesson_id: lesson.id
     }
     |> cast(attrs, [:content])
-    |> validate_required([:content])
   end
 
   def update_changeset(lesson, attrs) do
-    lesson
-    |> cast(attrs, [:content])
-    |> validate_required([:content])
+    lesson |> cast(attrs, [:content])
   end
 
   def get_by_lesson_id(lesson_id) do

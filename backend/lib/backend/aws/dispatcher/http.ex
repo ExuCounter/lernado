@@ -15,7 +15,7 @@ defmodule Backend.AWS.Dispatcher.HTTP do
     )
   end
 
-  def multipart_upload(bucket, key, filename) do
+  def multipart_upload(bucket, key, path) do
     client = client()
 
     {time, result} =
@@ -24,7 +24,7 @@ defmodule Backend.AWS.Dispatcher.HTTP do
           client: client,
           bucket: bucket,
           key: key,
-          filename: filename
+          path: path
         })
       end)
 

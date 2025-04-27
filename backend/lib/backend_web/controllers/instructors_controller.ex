@@ -223,6 +223,41 @@ defmodule BackendWeb.InstructorsController do
     end
   end
 
+  def upload_course_lesson_video(conn, %{"lesson_id" => nil}) do
+    conn |> not_found_response("Lesson ID is required.")
+  end
+
+  def upload_course_lesson_video(conn, params) do
+    lesson = Backend.Instructors.find_course_lesson_by_id(params["lesson_id"])
+
+    if is_nil(lesson) do
+      conn |> not_found_response()
+    else
+      with true <-
+             Backend.Instructors.authorize(
+               :upload_course_lesson_video,
+               conn.assigns.current_user,
+               %{
+                 course_lesson: lesson
+               }
+             ),
+           {:ok, lesson} <-
+             Backend.Instructors.upload_course_lesson_video(lesson, params["video"]) do
+        lesson =
+          lesson
+          |> Backend.Repo.preload([:text_details, :video_details, module: [course: :project]])
+
+        conn |> successful_response(%{lesson: lesson})
+      else
+        false ->
+          conn |> forbidden_response()
+
+        {:error, changeset} ->
+          conn |> failed_changeset_response(changeset)
+      end
+    end
+  end
+
   def delete_course_lesson(conn, %{"lesson_id" => nil}) do
     conn |> not_found_response("Lesson ID is required.")
   end

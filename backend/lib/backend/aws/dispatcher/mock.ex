@@ -1,28 +1,24 @@
 defmodule Backend.AWS.Dispatcher.Mock do
   @behaviour Backend.AWS.Dispatcher
 
-  def multipart_upload(_bucket, _key, _filename) do
-    {:ok,
-     %{
-       "CompleteMultipartUploadResult" => %{
-         "Bucket" => "my-bucket",
-         "Key" => "file.bin",
-         "Location" => "https://dummy.aws.location/file.bin"
-       },
-       "ServerSideEncryption" => "AES256"
-     }}
+  def multipart_upload(bucket, key, path) do
+    path |> File.read!()
+
+    Process.sleep(:rand.uniform(1_000))
+
+    {:ok, "https://aws.amazon.com/#{bucket}/#{key}"}
   end
 
   def list_objects(_bucket) do
     [
       %{
         key: "file.bin",
-        last_modified: "2023-10-01T00:00:00Z"
+        last_modified: "2025-04-01T00:00:00Z"
       }
     ]
   end
 
-  def create_bucket_if_not_exists(_bucket) do
-    {:ok, "my-bucket"}
+  def create_bucket_if_not_exists(bucket) do
+    {:ok, bucket}
   end
 end

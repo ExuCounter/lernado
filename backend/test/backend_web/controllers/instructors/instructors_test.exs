@@ -540,4 +540,32 @@ defmodule BackendWeb.Controllers.InstructorsTest do
       assert_bad_request_response(conn, %{"status" => ["Course is already published"]})
     end
   end
+
+  test "update course lesson video", ctx do
+    ctx = ctx |> exec(:create_course_lesson, type: :video) |> produce(conn: [:user_session])
+
+    upload = %Plug.Upload{
+      path: "test/fixtures/dummy.mp4",
+      filename: "dummy.mp4",
+      content_type: "video/mp4"
+    }
+
+    conn =
+      post(ctx.conn, ~p"/api/instructors/courses/videos/upload", %{
+        "lesson_id" => ctx.instructor_course_lesson.id,
+        "video" => upload
+      })
+
+    assert %{
+             "data" => %{
+               "lesson" => %{
+                 "video_details" => %{
+                   "video_url" => video_url
+                 }
+               }
+             }
+           } = Jason.decode!(conn.resp_body)
+
+    assert video_url =~ ~r/https:\/\/.*dummy\.mp4/
+  end
 end

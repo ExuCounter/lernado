@@ -8,8 +8,8 @@ defmodule Backend.AWS.MultipartUpload do
 
   @type aws_error :: {:unexpected_response, any()} | term()
 
-  def get_mime_type_from_filename(filename) do
-    filename
+  def get_mime_type_from_path(path) do
+    path
     |> Path.extname()
     |> String.trim_leading(".")
     |> MIME.type()
@@ -18,7 +18,6 @@ defmodule Backend.AWS.MultipartUpload do
   @spec init_upload(%{
           client: map(),
           bucket: String.t(),
-          filename: String.t(),
           key: String.t()
         }) :: {:ok, String.t()} | {:error, aws_error()}
   defp init_upload(%{
@@ -28,7 +27,7 @@ defmodule Backend.AWS.MultipartUpload do
        }) do
     with {:ok, %{"InitiateMultipartUploadResult" => %{"UploadId" => upload_id}}, _} <-
            AWS.S3.create_multipart_upload(client, bucket, key, %{
-             "ContentType" => get_mime_type_from_filename(key)
+             "ContentType" => get_mime_type_from_path(key)
            }) do
       {:ok, upload_id}
     else
@@ -61,8 +60,10 @@ defmodule Backend.AWS.MultipartUpload do
 
     input = %{"CompleteMultipartUpload" => %{"Part" => parts_input}, "UploadId" => upload_id}
 
-    with {:ok, _, _} <- AWS.S3.complete_multipart_upload(client, bucket, key, input) do
-      {:ok, :completed}
+    with {:ok, result, _xml_info} <- AWS.S3.complete_multipart_upload(client, bucket, key, input) do
+      url = result["CompleteMultipartUploadResult"]["Location"]
+
+      {:ok, url}
     else
       {:error, reason} ->
         Logger.error("Multipart upload failed for #{key}. Reason: #{reason}")
@@ -90,7 +91,7 @@ defmodule Backend.AWS.MultipartUpload do
        }) do
     input = %{"uploadId" => upload_id, "Key" => key}
 
-    with {:ok, _, _} <- AWS.S3.abort_multipart_upload(client, bucket, key, input) do
+    with {:ok, _output, _xml_info} <- AWS.S3.abort_multipart_upload(client, bucket, key, input) do
       Logger.info("Multipart upload aborted for #{key}.")
       {:ok, :aborted}
     else
@@ -203,19 +204,19 @@ defmodule Backend.AWS.MultipartUpload do
   @spec upload_part(%{
           client: map(),
           bucket: String.t(),
-          filename: String.t(),
+          path: String.t(),
           key: String.t(),
           upload_id: String.t()
         }) :: {:ok, list(part())} | {:error, aws_error()}
   defp upload_parts(%{
          client: client,
          bucket: bucket,
-         filename: filename,
+         path: path,
          key: key,
          upload_id: upload_id
        }) do
     parts =
-      filename
+      path
       |> File.stream!(@chunk_size)
       |> Stream.with_index(1)
       |> Task.async_stream(
@@ -253,28 +254,27 @@ defmodule Backend.AWS.MultipartUpload do
   @spec upload_part(%{
           client: map(),
           bucket: String.t(),
-          filename: String.t(),
+          path: String.t(),
           key: String.t()
         }) :: {:ok, term()} | {:error, aws_error()}
   def upload(%{
         client: client,
         bucket: bucket,
-        filename: filename,
+        path: path,
         key: key
       }) do
     with {:ok, upload_id} <-
            init_upload(%{
              client: client,
              bucket: bucket,
-             filename: filename,
              key: key
            }),
          {:ok, parts} <-
            upload_parts(%{
              client: client,
              bucket: bucket,
-             filename: filename,
              upload_id: upload_id,
+             path: path,
              key: key
            }) do
       complete_upload(%{

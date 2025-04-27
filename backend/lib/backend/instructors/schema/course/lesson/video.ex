@@ -20,13 +20,11 @@ defmodule Backend.Instructors.Schema.Course.Lesson.Video do
       description: ""
     }
     |> cast(attrs, [:video_url, :description])
-    |> validate_required([:video_url])
   end
 
   def update_changeset(video, attrs) do
     video
     |> cast(attrs, [:video_url, :description])
-    |> validate_required([:video_url])
   end
 
   def get_by_lesson_id(lesson_id) do

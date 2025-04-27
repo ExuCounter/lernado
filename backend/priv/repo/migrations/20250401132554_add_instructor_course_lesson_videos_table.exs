@@ -5,7 +5,7 @@ defmodule YourApp.Repo.Migrations.AddInstructorCourseLessonVideosTable do
     create table(:instructor_course_lesson_videos, primary_key: false) do
       add :id, :binary_id, primary_key: true, default: fragment("uuid_generate_v4()")
       add :description, :text, default: ""
-      add :video_url, :string, null: false
+      add :video_url, :string
 
       add :lesson_id,
           references(:instructor_course_lessons, type: :binary_id, on_delete: :delete_all)
