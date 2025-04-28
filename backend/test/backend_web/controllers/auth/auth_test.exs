@@ -13,14 +13,11 @@ defmodule BackendWeb.Controllers.AuthTest do
           "password" => ctx.user.password
         })
 
-      assert_successfull_response(conn)
-
       assert %{
                "data" => %{
                  "user" => _
                }
-             } =
-               Jason.decode!(conn.resp_body)
+             } = json_response(conn, 200)
     end
 
     test "signs in an unexisting user", ctx do
@@ -32,7 +29,9 @@ defmodule BackendWeb.Controllers.AuthTest do
           "password" => Faker.String.base64()
         })
 
-      assert_forbidden_response(conn, "You are not authorized to perform this action.")
+      assert %{
+               "message" => "You are not authorized to perform this action."
+             } = json_response(conn, 403)
     end
 
     test "signs in an existing user with wrong password", ctx do
@@ -44,7 +43,9 @@ defmodule BackendWeb.Controllers.AuthTest do
           "password" => ctx.user.password <> "wrong"
         })
 
-      assert_forbidden_response(conn, "You are not authorized to perform this action.")
+      assert %{
+               "message" => "You are not authorized to perform this action."
+             } = json_response(conn, 403)
     end
 
     @api_auth_register_endpoint "/auth/register"
@@ -75,6 +76,16 @@ defmodule BackendWeb.Controllers.AuthTest do
                }
              } =
                Jason.decode!(conn.resp_body)
+
+      assert %{
+               "data" => %{
+                 "user" => %{
+                   "email" => ^email,
+                   "first_name" => ^first_name,
+                   "last_name" => ^last_name
+                 }
+               }
+             } = json_response(conn, 200)
     end
 
     test "register with existing email", ctx do
@@ -88,7 +99,11 @@ defmodule BackendWeb.Controllers.AuthTest do
           "last_name" => Faker.Person.last_name()
         })
 
-      assert_bad_request_response(conn, %{"email" => ["has already been taken"]})
+      assert %{
+               "message" => %{
+                 "email" => ["has already been taken"]
+               }
+             } = json_response(conn, 400)
     end
   end
 end

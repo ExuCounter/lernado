@@ -32,7 +32,7 @@ defmodule BackendWeb.Controllers.UsersTest do
                  }
                }
              } =
-               Jason.decode!(conn.resp_body)
+               json_response(conn, 200)
     end
 
     test "update with existing email", ctx do
@@ -45,7 +45,11 @@ defmodule BackendWeb.Controllers.UsersTest do
           user_id: ctx1.user.id
         })
 
-      assert_bad_request_response(conn, %{"email" => ["has already been taken"]})
+      assert %{
+               "message" => %{
+                 "email" => ["has already been taken"]
+               }
+             } = json_response(conn, 400)
     end
 
     test "update different user", ctx do
@@ -58,7 +62,7 @@ defmodule BackendWeb.Controllers.UsersTest do
           user_id: ctx2.user.id
         })
 
-      assert_forbidden_response(conn)
+      json_response(conn, 403)
     end
   end
 end

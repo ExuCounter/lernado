@@ -7,11 +7,15 @@ defmodule BackendWeb.Controllers.InstructorsTest do
 
       conn = post(ctx.conn, ~p"/api/instructors/create", %{})
 
-      assert conn.status == 200
+      json_response(conn, 200)
 
       conn = post(ctx.conn, ~p"/api/instructors/create", %{})
 
-      assert_bad_request_response(conn, %{"user_id" => ["has already been taken"]})
+      assert %{
+               "message" => %{
+                 "user_id" => ["has already been taken"]
+               }
+             } = json_response(conn, 400)
     end
 
     test "create instructor project", ctx do
@@ -21,11 +25,15 @@ defmodule BackendWeb.Controllers.InstructorsTest do
 
       conn = post(ctx.conn, ~p"/api/instructors/projects/create", %{"name" => name})
 
-      assert conn.status == 200
+      json_response(conn, 200)
 
       conn = post(ctx.conn, ~p"/api/instructors/projects/create", %{"name" => name})
 
-      assert_bad_request_response(conn, %{"name" => ["has already been taken"]})
+      assert %{
+               "message" => %{
+                 "name" => ["has already been taken"]
+               }
+             } = json_response(conn, 400)
     end
 
     test "update own project", ctx do
@@ -39,16 +47,13 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           "name" => name
         })
 
-      assert conn.status == 200
-
       assert %{
                "data" => %{
                  "project" => %{
                    "name" => ^name
                  }
                }
-             } =
-               Jason.decode!(conn.resp_body)
+             } = json_response(conn, 200)
 
       conn =
         put(ctx.conn, ~p"/api/instructors/projects/update", %{
@@ -56,7 +61,11 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           "name" => "short"
         })
 
-      assert_bad_request_response(conn, %{"name" => ["should be at least 6 character(s)"]})
+      assert %{
+               "message" => %{
+                 "name" => ["should be at least 6 character(s)"]
+               }
+             } = json_response(conn, 400)
     end
 
     test "update stranger project", ctx do
@@ -69,7 +78,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           "project_id" => ctx1.project.id
         })
 
-      assert_forbidden_response(conn)
+      json_response(conn, 403)
     end
 
     test "create course", ctx do
@@ -84,8 +93,6 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           "name" => name
         })
 
-      assert_successfull_response(conn)
-
       assert %{
                "data" => %{
                  "course" => %{
@@ -97,8 +104,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
                    "status" => "draft"
                  }
                }
-             } =
-               Jason.decode!(conn.resp_body)
+             } = json_response(conn, 200)
 
       conn =
         post(ctx.conn, ~p"/api/instructors/courses/create", %{
@@ -106,7 +112,11 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           "project_id" => ctx.project.id
         })
 
-      assert_bad_request_response(conn, %{"name" => ["has already been taken"]})
+      assert %{
+               "message" => %{
+                 "name" => ["has already been taken"]
+               }
+             } = json_response(conn, 400)
 
       conn =
         post(ctx.conn, ~p"/api/instructors/courses/create", %{
@@ -115,7 +125,11 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           "price" => -5.0
         })
 
-      assert_bad_request_response(conn, %{"price" => ["must be greater than or equal to 0"]})
+      assert %{
+               "message" => %{
+                 "price" => ["must be greater than or equal to 0"]
+               }
+             } = json_response(conn, 400)
     end
 
     test "update own course", ctx do
@@ -136,7 +150,11 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           "price" => -5.0
         })
 
-      assert_bad_request_response(conn, %{"price" => ["must be greater than or equal to 0"]})
+      assert %{
+               "message" => %{
+                 "price" => ["must be greater than or equal to 0"]
+               }
+             } = json_response(conn, 400)
     end
 
     test "update non-existing course", ctx do
@@ -157,7 +175,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           "price" => 5.0
         })
 
-      assert_not_found_response(conn)
+      json_response(conn, 404)
     end
 
     test "update stanger course", ctx do
@@ -170,7 +188,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           "name" => Faker.Company.name()
         })
 
-      assert_forbidden_response(conn)
+      json_response(conn, 403)
     end
 
     test "create course module", ctx do
@@ -202,7 +220,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
                    "order_index" => 0
                  }
                }
-             } = Jason.decode!(conn.resp_body)
+             } = json_response(conn, 200)
 
       conn =
         post(ctx.conn, ~p"/api/instructors/courses/modules/create", %{
@@ -217,7 +235,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
                    "order_index" => 1
                  }
                }
-             } = Jason.decode!(conn.resp_body)
+             } = json_response(conn, 200)
 
       conn =
         post(ctx.conn, ~p"/api/instructors/courses/modules/create", %{
@@ -226,7 +244,9 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           "description" => "Description"
         })
 
-      assert_bad_request_response(conn, %{"title" => ["has already been taken"]})
+      assert %{
+               "message" => %{"title" => ["has already been taken"]}
+             } = json_response(conn, 400)
     end
 
     test "update non-existing course module", ctx do
@@ -247,7 +267,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           "description" => "Description"
         })
 
-      assert_not_found_response(conn)
+      json_response(conn, 404)
     end
 
     test "update stranger course module", ctx do
@@ -270,7 +290,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           "description" => "Description"
         })
 
-      assert_forbidden_response(conn)
+      json_response(conn, 403)
     end
 
     test "create course lesson", ctx do
@@ -306,7 +326,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
                    }
                  }
                }
-             } = Jason.decode!(conn.resp_body)
+             } = json_response(conn, 200)
 
       conn =
         post(ctx.conn, ~p"/api/instructors/courses/lessons/create", %{
@@ -322,7 +342,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
                    "order_index" => 1
                  }
                }
-             } = Jason.decode!(conn.resp_body)
+             } = json_response(conn, 200)
 
       conn =
         post(ctx.conn, ~p"/api/instructors/courses/lessons/create", %{
@@ -332,7 +352,12 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           "type" => "text"
         })
 
-      assert_bad_request_response(conn, %{"title" => ["has already been taken"]})
+      assert %{
+               "message" => %{
+                 "title" => ["has already been taken"]
+               }
+             } =
+               json_response(conn, 400)
 
       conn =
         post(ctx.conn, ~p"/api/instructors/courses/lessons/create", %{
@@ -353,7 +378,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
                    }
                  }
                }
-             } = Jason.decode!(conn.resp_body)
+             } = json_response(conn, 200)
     end
 
     test "update non-existing course lesson", ctx do
@@ -376,7 +401,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           "type" => "text"
         })
 
-      assert_not_found_response(conn)
+      json_response(conn, 404)
     end
 
     test "update stranger course lesson", ctx do
@@ -401,7 +426,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           "type" => "text"
         })
 
-      assert_forbidden_response(conn)
+      json_response(conn, 403)
     end
 
     test "update own course and change it type", ctx do
@@ -425,8 +450,6 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           "video_url" => "https://youtube.com/video"
         })
 
-      assert_successfull_response(conn)
-
       assert %{
                "data" => %{
                  "lesson" => %{
@@ -437,7 +460,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
                    }
                  }
                }
-             } = Jason.decode!(conn.resp_body)
+             } = json_response(conn, 200)
     end
 
     test "delete course lesson", ctx do
@@ -458,7 +481,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           "lesson_id" => ctx.course_lesson.id
         })
 
-      assert_successfull_response(conn)
+      json_response(conn, 200)
     end
 
     test "publish course", ctx do
@@ -477,7 +500,11 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           "course_id" => ctx.course.id
         })
 
-      assert_bad_request_response(conn, %{"public_path" => ["can't be blank"]})
+      assert %{
+               "message" => %{
+                 "public_path" => ["can't be blank"]
+               }
+             } = json_response(conn, 400)
 
       Backend.Instructors.update_course(ctx.course, %{public_path: "course_path"})
 
@@ -492,7 +519,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
                    "status" => "published"
                  }
                }
-             } = Jason.decode!(conn.resp_body)
+             } = json_response(conn, 200)
     end
 
     test "publish stranger course", ctx do
@@ -512,7 +539,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           "course_id" => ctx1.course.id
         })
 
-      assert_forbidden_response(conn)
+      json_response(conn, 403)
     end
 
     test "publish already published course", ctx do
@@ -537,7 +564,11 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           "course_id" => ctx.course.id
         })
 
-      assert_bad_request_response(conn, %{"status" => ["Course is already published"]})
+      assert %{
+               "message" => %{
+                 "status" => ["Course is already published"]
+               }
+             } = json_response(conn, 400)
     end
   end
 
@@ -575,7 +606,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
                  }
                }
              }
-           } = Jason.decode!(conn.resp_body)
+           } = json_response(conn, 200)
 
     assert video_url =~ ~r/https:\/\/.*dummy\.mp4/
   end

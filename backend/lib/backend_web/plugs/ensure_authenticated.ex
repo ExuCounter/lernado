@@ -10,7 +10,7 @@ defmodule BackendWeb.Plugs.EnsureAuthenticated do
     current_user = get_session(conn, :current_user)
 
     if is_nil(current_user) do
-      conn |> unauthorized_response() |> halt()
+      {:error, :unauthorized}
     else
       assign(conn, :current_user, current_user)
     end
