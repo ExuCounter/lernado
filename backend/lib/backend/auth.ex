@@ -6,7 +6,7 @@ defmodule Backend.Auth do
 
     case user do
       nil ->
-        {:error, "Invalid email or password"}
+        {:error, :unauthorized}
 
       user ->
         case Argon2.verify_pass(password, user.password_hash) do
@@ -14,7 +14,7 @@ defmodule Backend.Auth do
             {:ok, user}
 
           false ->
-            {:error, "Invalid email or password"}
+            {:error, :unauthorized}
         end
     end
   end

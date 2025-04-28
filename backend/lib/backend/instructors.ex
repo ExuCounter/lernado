@@ -46,24 +46,20 @@ defmodule Backend.Instructors do
     |> Backend.Repo.insert()
   end
 
-  def find_instructor_by_id(id) do
-    Backend.Repo.get_by(Backend.Instructors.Schema.Instructor, id: id)
-  end
-
   def find_project_by_id(id) do
-    Backend.Repo.get_by(Backend.Instructors.Schema.Project, id: id)
+    Backend.Repo.find_by_id(Backend.Instructors.Schema.Project, id)
   end
 
   def find_course_by_id(id) do
-    Backend.Repo.get_by(Backend.Instructors.Schema.Course, id: id)
+    Backend.Repo.find_by_id(Backend.Instructors.Schema.Course, id)
   end
 
   def find_course_module_by_id(id) do
-    Backend.Repo.get_by(Backend.Instructors.Schema.Course.Module, id: id)
+    Backend.Repo.find_by_id(Backend.Instructors.Schema.Course.Module, id)
   end
 
   def find_course_lesson_by_id(id) do
-    Backend.Repo.get_by(Backend.Instructors.Schema.Course.Lesson, id: id)
+    Backend.Repo.find_by_id(Backend.Instructors.Schema.Course.Lesson, id)
   end
 
   def get_next_course_module_order_index(course) do

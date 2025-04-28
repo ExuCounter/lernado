@@ -1,9 +1,11 @@
 defmodule Backend.Instructors.Policy do
   @behaviour Bodyguard.Policy
 
-  def authorize(:create_instructor, _user), do: true
+  def authorize(action, user), do: authorize(action, user, [])
 
-  def authorize(:create_project, _user), do: true
+  def authorize(:create_instructor, _user, _params), do: true
+
+  def authorize(:create_project, _user, _params), do: true
 
   def authorize(:update_project, user, %{project: project} = _params) do
     project = Backend.Repo.preload(project, :instructor)

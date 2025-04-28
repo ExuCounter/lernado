@@ -32,7 +32,7 @@ defmodule BackendWeb.Controllers.AuthTest do
           "password" => Faker.String.base64()
         })
 
-      assert_unauthorized_response(conn, "Invalid email or password")
+      assert_forbidden_response(conn, "You are not authorized to perform this action.")
     end
 
     test "signs in an existing user with wrong password", ctx do
@@ -44,7 +44,7 @@ defmodule BackendWeb.Controllers.AuthTest do
           "password" => ctx.user.password <> "wrong"
         })
 
-      assert_unauthorized_response(conn, "Invalid email or password")
+      assert_forbidden_response(conn, "You are not authorized to perform this action.")
     end
 
     @api_auth_register_endpoint "/auth/register"
