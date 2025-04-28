@@ -1,4 +1,4 @@
-defmodule Backend.AWS.DispatcherMock do
+defmodule Backend.AWS.Dispatcher.Mock do
   @behaviour Backend.AWS.Dispatcher
 
   def multipart_upload(bucket, key, path) do

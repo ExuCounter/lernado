@@ -1,4 +1,4 @@
-defmodule Backend.AWS.DispatcherHTTP do
+defmodule Backend.AWS.Dispatcher.HTTP do
   require Logger
   @behaviour Backend.AWS.Dispatcher
 
