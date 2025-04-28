@@ -31,8 +31,6 @@ defmodule BackendWeb.ConnCase do
 
       use SeedFactory.Test, schema: BackendWeb.SeedFactorySchema
 
-      import BackendWeb.ResponseHelpers
-
       import Mox
 
       setup :verify_on_exit!

@@ -46,8 +46,6 @@ defmodule BackendWeb do
 
       import Plug.Conn
 
-      import BackendWeb.ResponseHelpers
-
       unquote(verified_routes())
     end
   end

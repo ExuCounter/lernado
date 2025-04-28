@@ -1,6 +1,5 @@
 defmodule BackendWeb.Plugs.EnsureAuthenticated do
   import Plug.Conn
-  import BackendWeb.ResponseHelpers
 
   def init(opts), do: opts
 

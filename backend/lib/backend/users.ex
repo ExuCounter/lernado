@@ -14,6 +14,6 @@ defmodule Backend.Users do
   end
 
   def find_by_id(id) do
-    Backend.Repo.get_by(Backend.Users.Schema.User, id: id)
+    Backend.Repo.find_by_id(Backend.Users.Schema.User, id)
   end
 end
