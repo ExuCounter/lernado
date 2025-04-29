@@ -21,4 +21,8 @@ defmodule Backend.AWS.Dispatcher.Mock do
   def create_bucket_if_not_exists(bucket) do
     {:ok, bucket}
   end
+
+  def delete_object(_bucket, _key) do
+    {:ok, :deleted}
+  end
 end

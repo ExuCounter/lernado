@@ -572,7 +572,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
     end
   end
 
-  test "update course lesson video", ctx do
+  test "update/delete course lesson video", ctx do
     ctx = ctx |> exec(:create_course_lesson, type: :video) |> produce(conn: [:user_session])
 
     upload_data = %Plug.Upload{
@@ -585,10 +585,19 @@ defmodule BackendWeb.Controllers.InstructorsTest do
       Backend.AWS.DispatcherMock,
       :multipart_upload,
       fn _bucket, key, path ->
-        assert key == "courses/#{ctx.course.id}/videos/dummy.mp4"
+        assert key == "courses/#{ctx.course.id}/dummy.mp4"
         assert path == "test/fixtures/dummy.mp4"
 
         {:ok, "https://aws.amazon.com/#{key}"}
+      end
+    )
+
+    expect(
+      Backend.AWS.DispatcherMock,
+      :delete_object,
+      fn _bucket, key ->
+        assert key == "courses/#{ctx.course.id}/dummy.mp4"
+        {:ok, :deleted}
       end
     )
 
@@ -609,5 +618,30 @@ defmodule BackendWeb.Controllers.InstructorsTest do
            } = json_response(conn, 200)
 
     assert video_url =~ ~r/https:\/\/.*dummy\.mp4/
+
+    conn =
+      put(ctx.conn, ~p"/api/instructors/courses/videos/delete", %{
+        "lesson_id" => ctx.course_lesson.id
+      })
+  end
+
+  test "upload wrong format file", ctx do
+    ctx = ctx |> exec(:create_course_lesson, type: :video) |> produce(conn: [:user_session])
+
+    upload_data = %Plug.Upload{
+      path: "test/fixtures/file.css",
+      filename: "file.css",
+      content_type: "text/css"
+    }
+
+    conn =
+      post(ctx.conn, ~p"/api/instructors/courses/videos/upload", %{
+        "lesson_id" => ctx.course_lesson.id,
+        "video" => upload_data
+      })
+
+    assert %{
+             "message" => "Filetype: text/css is not allowed for upload"
+           } = json_response(conn, 400)
   end
 end

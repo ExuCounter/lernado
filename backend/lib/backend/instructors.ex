@@ -156,17 +156,27 @@ defmodule Backend.Instructors do
     end
   end
 
-  def upload_video(course, path, filename) do
-    key = "courses/#{course.id}/videos/#{filename}"
-
-    Backend.AWS.Courses.multipart_upload(key, path)
-  end
-
   def upload_course_lesson_video(lesson, %{path: path, filename: filename} = _params) do
     lesson = Backend.Repo.preload(lesson, module: :course)
 
-    with {:ok, video_url} <- upload_video(lesson.module.course, path, filename),
+    with {:ok, video_url} <-
+           Backend.AWS.Courses.upload_file(lesson.module.course.id, path, filename),
          {:ok, lesson} <- update_course_lesson(lesson, %{video_url: video_url}) do
+      {:ok, lesson}
+    end
+  end
+
+  def delete_course_lesson_video(lesson) do
+    lesson = Backend.Repo.preload(lesson, [:video_details, module: [:course]])
+    course_id = lesson.module.course.id
+    filename = lesson.video_details.video_url |> Path.basename()
+
+    with {:ok, :deleted} <-
+           Backend.AWS.Courses.delete_file(
+             course_id,
+             filename
+           ),
+         {:ok, lesson} <- update_course_lesson(lesson, %{video_url: nil}) do
       {:ok, lesson}
     end
   end

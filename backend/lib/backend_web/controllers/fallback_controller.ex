@@ -9,6 +9,14 @@ defmodule BackendWeb.FallbackController do
     })
   end
 
+  def call(conn, {:error, %{status: :bad_request, message: message}}) do
+    conn
+    |> put_status(400)
+    |> json(%{
+      message: message
+    })
+  end
+
   def call(conn, {:error, :unauthorized}) do
     conn
     |> put_status(403)

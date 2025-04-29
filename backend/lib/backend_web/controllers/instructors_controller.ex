@@ -219,6 +219,33 @@ defmodule BackendWeb.InstructorsController do
     end
   end
 
+  def delete_course_lesson_video(conn, params) do
+    with {:ok, lesson} <- Backend.Instructors.find_course_lesson_by_id(params["lesson_id"]),
+         :ok <-
+           Bodyguard.permit(
+             Backend.Instructors,
+             :delete_course_lesson_video,
+             conn.assigns.current_user,
+             %{
+               course_lesson: lesson
+             }
+           ),
+         {:ok, lesson} <-
+           Backend.Instructors.delete_course_lesson_video(lesson) do
+      lesson =
+        lesson
+        |> Backend.Repo.preload([:text_details, :video_details, module: [course: :project]])
+
+      conn
+      |> put_status(200)
+      |> json(%{
+        data: %{
+          lesson: lesson
+        }
+      })
+    end
+  end
+
   def delete_course_lesson(conn, params) do
     with {:ok, lesson} <- Backend.Instructors.find_course_lesson_by_id(params["lesson_id"]),
          :ok <-

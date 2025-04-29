@@ -46,7 +46,8 @@ defmodule Backend.Instructors.Policy do
       when action in [
              :update_course_lesson,
              :delete_course_lesson,
-             :upload_course_lesson_video
+             :upload_course_lesson_video,
+             :delete_course_lesson_video
            ] do
     course_lesson = Backend.Repo.preload(course_lesson, module: [course: [project: :instructor]])
 

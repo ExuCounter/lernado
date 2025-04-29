@@ -77,8 +77,9 @@ defmodule Backend.AWS.Dispatcher.HTTP do
 
   defp check_if_bucket_exists?(bucket) do
     client = client()
+    input = %{}
 
-    case AWS.S3.head_bucket(client, bucket, %{}) do
+    case AWS.S3.head_bucket(client, bucket, input) do
       {:ok, _, _} ->
         true
 
@@ -87,11 +88,41 @@ defmodule Backend.AWS.Dispatcher.HTTP do
     end
   end
 
+  defp check_if_object_exists?(bucket, key) do
+    client = client()
+    input = %{}
+
+    case AWS.S3.head_object(client, bucket, key, input) do
+      {:ok, _, _} ->
+        true
+
+      {:error, _} ->
+        nil
+    end
+  end
+
   def create_bucket_if_not_exists(bucket) do
     if check_if_bucket_exists?(bucket) do
       {:ok, :already_exists}
     else
       create_bucket(bucket)
+    end
+  end
+
+  def delete_object(bucket, key) do
+    client = client()
+    input = %{}
+
+    if check_if_object_exists?(bucket, key) do
+      case AWS.S3.delete_object(client, bucket, key, input) do
+        {:ok, _, _} ->
+          {:ok, :deleted}
+
+        {:error, error} ->
+          {:error, error}
+      end
+    else
+      {:error, :not_found}
     end
   end
 end

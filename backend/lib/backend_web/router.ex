@@ -55,6 +55,7 @@ defmodule BackendWeb.Router do
 
         scope "/videos" do
           post("/upload", InstructorsController, :upload_course_lesson_video)
+          put("/delete", InstructorsController, :delete_course_lesson_video)
         end
       end
     end
