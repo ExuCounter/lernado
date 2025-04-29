@@ -20,6 +20,7 @@ defmodule Backend.Instructors.Schema.Course.Lesson do
     field :order_index, :integer
     field :type, Backend.Instructors.Course.Lesson.Type
 
+    belongs_to :course, Backend.Instructors.Schema.Course, type: :binary_id
     belongs_to :module, Backend.Instructors.Schema.Course.Module, type: :binary_id
 
     has_one :video_details, Backend.Instructors.Schema.Course.Lesson.Video,
@@ -34,6 +35,7 @@ defmodule Backend.Instructors.Schema.Course.Lesson do
     order_index = Backend.Instructors.get_next_course_lesson_order_index(module)
 
     %__MODULE__{
+      course_id: module.course_id,
       module_id: module.id,
       order_index: order_index
     }

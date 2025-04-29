@@ -623,6 +623,16 @@ defmodule BackendWeb.Controllers.InstructorsTest do
       put(ctx.conn, ~p"/api/instructors/courses/videos/delete", %{
         "lesson_id" => ctx.course_lesson.id
       })
+
+    assert %{
+             "data" => %{
+               "lesson" => %{
+                 "video_details" => %{
+                   "video_url" => nil
+                 }
+               }
+             }
+           } = json_response(conn, 200)
   end
 
   test "upload wrong format file", ctx do
