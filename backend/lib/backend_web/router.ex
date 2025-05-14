@@ -59,6 +59,14 @@ defmodule BackendWeb.Router do
         end
       end
     end
+
+    scope "/payments" do
+      post("/request-course-form", PaymentsController, :request_course_form)
+    end
+  end
+
+  scope "/webhooks", BackendWeb.Webhooks do
+    post("/liqpay/update", LiqPayController, :update_or_create)
   end
 
   scope "/auth", BackendWeb do

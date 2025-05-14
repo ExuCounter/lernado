@@ -87,4 +87,48 @@ defmodule Backend.SeedFactorySchema do
 
     produce(:course_lesson)
   end
+
+  command :create_payment_integration do
+    param(:instructor, entity: :instructor)
+    param(:enabled, value: false)
+    param(:credentials, value: %{})
+    param(:provider)
+
+    resolve(fn args ->
+      with {:ok, payment_integration} <-
+             args.instructor |> Backend.Instructors.create_payment_integration(args) do
+        {:ok, %{payment_integration: payment_integration}}
+      end
+    end)
+
+    produce(:payment_integration)
+  end
+
+  command :enable_payment_integration do
+    param(:payment_integration, entity: :payment_integration)
+
+    resolve(fn args ->
+      with {:ok, payment_integration} <-
+             args.payment_integration |> Backend.Instructors.enable_payment_integration() do
+        {:ok, %{payment_integration: payment_integration}}
+      end
+    end)
+
+    update(:payment_integration)
+  end
+
+  command :publish_course do
+    param(:course, entity: :course)
+    param(:public_path)
+    param(:price, generate: &Faker.Commerce.price/0)
+    param(:currency, generate: &Faker.Currency.code/0)
+
+    resolve(fn args ->
+      with {:ok, course} <- args.course |> Backend.Instructors.publish_course(args) do
+        {:ok, %{course: course}}
+      end
+    end)
+
+    update(:course)
+  end
 end

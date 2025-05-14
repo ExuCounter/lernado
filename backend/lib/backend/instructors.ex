@@ -177,4 +177,24 @@ defmodule Backend.Instructors do
       {:ok, lesson}
     end
   end
+
+  def create_payment_integration(instructor, params) do
+    instructor
+    |> Backend.Instructors.Schema.PaymentIntegration.create_changeset(params)
+    |> Backend.Repo.insert()
+  end
+
+  def enable_payment_integration(integration) do
+    integration
+    |> Backend.Instructors.Schema.PaymentIntegration.update_changeset(%{enabled: true})
+    |> Backend.Repo.update()
+  end
+
+  def ensure_course_published(course) do
+    if course.status == :published do
+      {:ok, course}
+    else
+      {:error, %{message: "Course is not published", status: :bad_request}}
+    end
+  end
 end

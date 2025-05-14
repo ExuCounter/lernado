@@ -33,7 +33,6 @@ defmodule Backend.AWS.BucketsManager do
 
         {:error, reason} ->
           Logger.error("Failed to create bucket #{bucket}: #{inspect(reason)}")
-          :init.stop()
       end
     end
 

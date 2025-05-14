@@ -59,7 +59,7 @@ defmodule Backend.Instructors.Schema.Course do
 
   def publish_changeset(%{status: :draft} = course, attrs) do
     course
-    |> cast(attrs, [:public_path])
+    |> cast(attrs, [:public_path, :price, :currency])
     |> change(status: :published)
     |> validate_required([:status, :currency, :price, :public_path])
     |> validate_number(:price, greater_than_or_equal_to: 0)
