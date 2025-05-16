@@ -278,7 +278,7 @@ defmodule BackendWeb.InstructorsController do
            Bodyguard.permit(Backend.Instructors, :publish_course, conn.assigns.current_user, %{
              course: course
            }),
-         {:ok, course} <- Backend.Instructors.publish_course(course, params) do
+         {:ok, course} <- Backend.Instructors.publish_course(course) do
       course = Backend.Repo.preload(course, :project)
 
       conn

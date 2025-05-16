@@ -28,9 +28,9 @@ defmodule Backend.Instructors do
     |> Backend.Repo.update()
   end
 
-  def publish_course(course, attrs) do
+  def publish_course(course) do
     course
-    |> Backend.Instructors.Schema.Course.publish_changeset(attrs)
+    |> Backend.Instructors.Schema.Course.publish_changeset()
     |> Backend.Repo.update()
   end
 
@@ -184,15 +184,17 @@ defmodule Backend.Instructors do
     |> Backend.Repo.insert()
   end
 
-  def enable_payment_integration(integration) do
-    integration
-    |> Backend.Instructors.Schema.PaymentIntegration.update_changeset(%{enabled: true})
+  def attach_payment_integration_to_course(course, integration) do
+    course
+    |> Backend.Instructors.Schema.Course.update_changeset(%{
+      payment_integration_id: integration.id
+    })
     |> Backend.Repo.update()
   end
 
   def ensure_course_published(course) do
     if course.status == :published do
-      {:ok, course}
+      :ok
     else
       {:error, %{message: "Course is not published", status: :bad_request}}
     end

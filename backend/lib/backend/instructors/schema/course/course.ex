@@ -25,6 +25,11 @@ defmodule Backend.Instructors.Schema.Course do
     field :public_path, :string
 
     belongs_to :project, Backend.Instructors.Schema.Project, type: :binary_id
+
+    belongs_to :payment_integration, Backend.Instructors.Schema.PaymentIntegration,
+      type: :binary_id,
+      foreign_key: :payment_integration_id
+
     has_many :modules, Backend.Instructors.Schema.Course.Module, foreign_key: :course_id
     timestamps()
   end
@@ -47,7 +52,7 @@ defmodule Backend.Instructors.Schema.Course do
 
   def update_changeset(course, attrs) do
     course
-    |> cast(attrs, [:name, :description, :price, :currency, :public_path])
+    |> cast(attrs, [:name, :description, :price, :currency, :public_path, :payment_integration_id])
     |> validate_required([:name, :price, :currency])
     |> unique_constraint(:name)
     |> validate_length(:name, min: 6)
@@ -57,9 +62,20 @@ defmodule Backend.Instructors.Schema.Course do
     |> validate_length(:currency, is: 3)
   end
 
-  def publish_changeset(%{status: :draft} = course, attrs) do
-    course
-    |> cast(attrs, [:public_path, :price, :currency])
+  def publish_changeset(%{status: :draft} = course) do
+    changeset = course |> Ecto.Changeset.change()
+    price = get_field(changeset, :price)
+    payment_integration_id = get_field(changeset, :payment_integration_id)
+
+    changeset =
+      if Decimal.compare(price, 0) != :eq and is_nil(payment_integration_id) do
+        changeset
+        |> add_error(:payment_integration_id, "Payment integration is required for paid courses")
+      else
+        changeset
+      end
+
+    changeset
     |> change(status: :published)
     |> validate_required([:status, :currency, :price, :public_path])
     |> validate_number(:price, greater_than_or_equal_to: 0)
@@ -67,7 +83,7 @@ defmodule Backend.Instructors.Schema.Course do
     |> validate_length(:currency, is: 3)
   end
 
-  def publish_changeset(course, _attrs) do
+  def publish_changeset(course) do
     course
     |> Ecto.Changeset.change()
     |> Ecto.Changeset.add_error(:status, "Course is already published")

@@ -36,8 +36,8 @@ defmodule Backend.Payments.Integrations.LiqPay do
       params
       |> Map.merge(%{
         "version" => "3",
-        "public_key" => keys["public_key"]
-        # "server_url" => "<URL>/webhooks/liqpay/update"
+        "public_key" => keys["public_key"],
+        "server_url" => "#{BackendWeb.Endpoint.url()}/webhooks/liqpay/update"
       })
       |> Jason.encode!()
       |> Base.encode64()
@@ -51,7 +51,7 @@ defmodule Backend.Payments.Integrations.LiqPay do
   end
 
   defp prepare_html_form(%{data: data, signature: signature}) do
-    "<form method=\"POST\" action=\"https://www.liqpay.ua/api/3/checkout\" accept-charset=\"utf-8\ >
+    "<form method=\"POST\" action=\"#{@checkout_url}\" accept-charset=\"utf-8\" >
       <input type=\"hidden\" name=\"data\" value=\"#{data}\" />
       <input type=\"hidden\" name=\"signature\" value=\"#{signature}\" />
       <button type=\"submit\" class=\"liqpay-button\">Pay with LiqPay</button>

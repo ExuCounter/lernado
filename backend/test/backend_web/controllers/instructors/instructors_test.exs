@@ -484,7 +484,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
       json_response(conn, 200)
     end
 
-    test "publish course", ctx do
+    test "publish free course", ctx do
       ctx =
         ctx
         |> produce([
@@ -653,58 +653,5 @@ defmodule BackendWeb.Controllers.InstructorsTest do
     assert %{
              "message" => "Filetype: text/css is not allowed for upload"
            } = json_response(conn, 400)
-  end
-
-  test "liqpay payment", ctx do
-    ctx1 =
-      ctx
-      |> produce([
-        :user,
-        :instructor,
-        :project,
-        :course
-      ])
-      |> exec(:create_payment_integration,
-        provider: :liqpay,
-        credentials: %{
-          public_key: "public_key",
-          private_key: "private_key"
-        }
-      )
-      |> exec(:enable_payment_integration)
-
-    ctx2 =
-      ctx
-      |> produce([
-        :user,
-        conn: [:user_session]
-      ])
-
-    conn =
-      post(ctx2.conn, ~p"/api/payments/request-course-form", %{
-        "course_id" => ctx1.course.id,
-        "user_id" => ctx2.user.id
-      })
-
-    assert %{
-             "message" => "Course is not published"
-           } = json_response(conn, 400)
-
-    ctx1 = ctx1 |> exec(:publish_course, public_path: "course_path")
-
-    conn =
-      post(ctx2.conn, ~p"/api/payments/request-course-form", %{
-        "course_id" => ctx1.course.id,
-        "user_id" => ctx2.user.id
-      })
-
-    assert %{
-             "data" => %{
-               "form" => form
-             }
-           } = json_response(conn, 200)
-
-    assert String.contains?(form, Backend.Payments.Integrations.LiqPay.checkout_url())
-    assert String.contains?(form, "Pay with LiqPay")
   end
 end

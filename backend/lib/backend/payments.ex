@@ -7,6 +7,16 @@ defmodule Backend.Payments do
     Backend.Repo.find_by_id(Backend.Instructors.Schema.PaymentIntegration, id)
   end
 
+  def find_course_payment_integration(course) do
+    case course.payment_integration_id do
+      nil ->
+        {:error, %{status: :not_found, message: "Payment integration is not found."}}
+
+      payment_integration_id ->
+        find_payment_integration_by_id(payment_integration_id)
+    end
+  end
+
   def find_enabled_payment_integration_by_instructor_id(id) do
     payment_integration =
       id |> Backend.Payments.Queries.enabled_payment_integrations() |> Backend.Repo.one()
@@ -66,13 +76,21 @@ defmodule Backend.Payments do
     end
   end
 
-  def request_course_form(course, user) do
+  def course_needs_payment_form(course) do
+    if Decimal.compare(course.price, 0) == :gt do
+      :ok
+    else
+      {:error, %{message: "Course is free", status: :bad_request}}
+    end
+  end
+
+  def request_course_payment_form(course, user) do
     course = Backend.Repo.preload(course, :project)
 
-    with {:ok, payment_integration} <-
-           find_enabled_payment_integration_by_instructor_id(course.project.instructor_id),
+    with :ok <- course_needs_payment_form(course),
+         :ok <- Backend.Instructors.ensure_course_published(course),
+         {:ok, payment_integration} <- find_course_payment_integration(course),
          credentials = retrieve_payment_integration_credentials(payment_integration),
-         {:ok, course} <- Backend.Instructors.ensure_course_published(course),
          {:ok, payment} <- create_pending_course_payment(course, payment_integration) do
       case payment_integration do
         %{provider: :liqpay} ->

@@ -45,6 +45,7 @@ defmodule Backend.SeedFactorySchema do
   command :create_course do
     param(:project, entity: :project)
     param(:name, generate: &Faker.Company.name/0)
+    param(:price, value: 0)
 
     resolve(fn args ->
       with {:ok, course} <- args.project |> Backend.Instructors.create_course(args) do
@@ -53,6 +54,21 @@ defmodule Backend.SeedFactorySchema do
     end)
 
     produce(:course)
+  end
+
+  command :update_course do
+    param(:course, entity: :course)
+    param(:public_path)
+    param(:currency, generate: &Faker.Currency.code/0)
+    param(:price, value: 0)
+
+    resolve(fn args ->
+      with {:ok, course} <- args.course |> Backend.Instructors.update_course(args) do
+        {:ok, %{course: course}}
+      end
+    end)
+
+    update(:course)
   end
 
   command :create_course_module do
@@ -92,7 +108,7 @@ defmodule Backend.SeedFactorySchema do
     param(:instructor, entity: :instructor)
     param(:enabled, value: false)
     param(:credentials, value: %{})
-    param(:provider)
+    param(:provider, value: :liqpay)
 
     resolve(fn args ->
       with {:ok, payment_integration} <-
@@ -104,27 +120,28 @@ defmodule Backend.SeedFactorySchema do
     produce(:payment_integration)
   end
 
-  command :enable_payment_integration do
+  command :enable_payments_for_course do
     param(:payment_integration, entity: :payment_integration)
+    param(:course, entity: :course)
 
     resolve(fn args ->
-      with {:ok, payment_integration} <-
-             args.payment_integration |> Backend.Instructors.enable_payment_integration() do
-        {:ok, %{payment_integration: payment_integration}}
+      with {:ok, course} <-
+             Backend.Instructors.attach_payment_integration_to_course(
+               args.course,
+               args.payment_integration
+             ) do
+        {:ok, %{course: course}}
       end
     end)
 
-    update(:payment_integration)
+    update(:course)
   end
 
   command :publish_course do
     param(:course, entity: :course)
-    param(:public_path)
-    param(:price, generate: &Faker.Commerce.price/0)
-    param(:currency, generate: &Faker.Currency.code/0)
 
     resolve(fn args ->
-      with {:ok, course} <- args.course |> Backend.Instructors.publish_course(args) do
+      with {:ok, course} <- args.course |> Backend.Instructors.publish_course() do
         {:ok, %{course: course}}
       end
     end)
