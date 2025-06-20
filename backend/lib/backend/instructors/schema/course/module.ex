@@ -1,16 +1,14 @@
 defmodule Backend.Instructors.Schema.Course.Module do
-  use Ecto.Schema
-  import Ecto.Changeset
+  use Backend, :schema
 
   @derive {Jason.Encoder,
            only: [:id, :title, :description, :order_index, :course, :inserted_at, :updated_at]}
-  @primary_key {:id, :binary_id, autogenerate: true}
   schema "course_modules" do
     field :title, :string
     field :description, :string
     field :order_index, :integer
 
-    belongs_to :course, Backend.Instructors.Schema.Course, type: :binary_id
+    belongs_to :course, Backend.Instructors.Schema.Course
     has_many :lessons, Backend.Instructors.Schema.Course.Lesson
 
     timestamps()

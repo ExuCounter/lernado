@@ -1,11 +1,9 @@
 defmodule Backend.Instructors.Schema.Instructor do
-  use Ecto.Schema
-  import Ecto.Changeset
+  use Backend, :schema
 
   @derive {Jason.Encoder, only: [:id, :user, :inserted_at, :updated_at]}
-  @primary_key {:id, :binary_id, autogenerate: true}
   schema "instructors" do
-    belongs_to :user, Backend.Users.Schema.User, type: :binary_id
+    belongs_to :user, Backend.Users.Schema.User
     has_many :projects, Backend.Instructors.Schema.Project
 
     has_many :payment_integrations, Backend.Instructors.Schema.PaymentIntegration

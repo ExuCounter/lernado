@@ -1,6 +1,5 @@
 defmodule Backend.Users.Schema.User do
-  use Ecto.Schema
-  import Ecto.Changeset
+  use Backend, :schema
 
   @derive {Jason.Encoder,
            only: [
@@ -12,7 +11,6 @@ defmodule Backend.Users.Schema.User do
              :inserted_at,
              :updated_at
            ]}
-  @primary_key {:id, :binary_id, autogenerate: true}
   schema "users" do
     field :email, :string
     field :first_name, :string

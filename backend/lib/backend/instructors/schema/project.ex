@@ -1,13 +1,11 @@
 defmodule Backend.Instructors.Schema.Project do
-  use Ecto.Schema
-  import Ecto.Changeset
+  use Backend, :schema
 
   @derive {Jason.Encoder, only: [:id, :name, :inserted_at, :updated_at]}
-  @primary_key {:id, :binary_id, autogenerate: true}
   schema "projects" do
     field :name, :string
 
-    belongs_to :instructor, Backend.Instructors.Schema.Instructor, type: :binary_id
+    belongs_to :instructor, Backend.Instructors.Schema.Instructor
     has_many :courses, Backend.Instructors.Schema.Course, foreign_key: :project_id
 
     timestamps()

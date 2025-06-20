@@ -50,7 +50,7 @@ defmodule Backend.Payments do
     |> Backend.Repo.insert()
   end
 
-  def process_liqpay_payment(%{"data" => raw_data, "signature" => signature}) do
+  def process_liqpay_payment(%{data: raw_data, signature: signature}) do
     data =
       raw_data
       |> Base.decode64!()

@@ -1,5 +1,3 @@
-// @ts-nocheck
-import { useEffect } from "react";
 import type { MetaFunction } from "@remix-run/node";
 
 export const meta: MetaFunction = () => {
@@ -10,35 +8,6 @@ export const meta: MetaFunction = () => {
 };
 
 export default function Index() {
-  useEffect(() => {
-    if (window.LiqPayCheckoutCallback) return;
-
-    window.LiqPayCheckoutCallback = function () {
-      LiqPayCheckout.init({
-        data: "eyJhY3Rpb24iOiJwYXkiLCJhbW91bnQiOjUwMSwiY3VycmVuY3kiOiJVU0QiLCJkZXNjcmlwdGlvbiI6Im15IG9yZGVyIiwib3JkZXJfaWQiOjExODgxLCJwdWJsaWNfa2V5Ijoic2FuZGJveF9pNzQzMzc3MDkwNiIsInNlcnZlcl91cmwiOiJodHRwczovLzc1MGQtMTc2LTM3LTE2NS0yNDMubmdyb2stZnJlZS5hcHAvd2ViaG9va3MvbGlxcGF5L3VwZGF0ZSIsInZlcnNpb24iOiIzIn0=",
-        signature: "8wktUqxsuiFKypI+CjVUO7cuOPE=",
-        embedTo: "#liqpay_checkout",
-        language: "en",
-        mode: "embed", // embed || popup
-      })
-        .on("liqpay.callback", function (data) {
-          console.log(data.status);
-          console.log(data);
-        })
-        .on("liqpay.ready", function (data) {
-          // ready
-        })
-        .on("liqpay.close", function (data) {
-          // close
-        });
-    };
-
-    const script = document.createElement("script");
-    script.src = "https://static.liqpay.ua/libjs/checkout.js";
-    script.async = true;
-    document.body.appendChild(script);
-  }, []);
-
   return (
     <div
       style={{
@@ -51,6 +20,14 @@ export default function Index() {
     >
       <div style={{ height: "100px" }}>It's my website</div>
       <div style={{ width: "500px", margin: "0 auto" }}>
+        <div
+          dangerouslySetInnerHTML={{
+            __html:
+              '<form method="POST" action="https://www.liqpay.ua/api/3/checkout" accept-charset="utf-8" >\n<input type="hidden" name="data" value="eyJkZXNjcmlwdGlvbiI6IkNvdXJzZSA5YTUxN2E5ZC1hYTZkLTRhYzgtYTA0Ni03N2JkZWVlNjZhOWEgcGF5bWVudCBmb3IgYzkxMDUyNjMtYTRhZS00ZDg4LWE5MjAtY2Q5OTM1YTZjMGNmIiwiY3VycmVuY3kiOiJVU0QiLCJhY3Rpb24iOiJwYXkiLCJhbW91bnQiOiIxMDAuMCIsInB1YmxpY19rZXkiOiJwdWJsaWNfa2V5Iiwic2VydmVyX3VybCI6Imh0dHA6Ly9sb2NhbGhvc3Q6NDAwMi93ZWJob29rcy9saXFwYXkvdXBkYXRlIiwidmVyc2lvbiI6IjMifQ==" />\n      <input type="hidden" name="signature" value="Dz1WjnsTccRucG06dmju5+nXm08=" />\n <script type="text/javascript" src="https://static.liqpay.ua/libjs/sdk_button.js"></script> \n <sdk-button label="' +
+              "LiqPay checkout" +
+              '" background="#77CC5D" onClick="submit()"></sdk-button>\n    </form>\n',
+          }}
+        ></div>
         <div id="liqpay_checkout"></div>
       </div>
     </div>

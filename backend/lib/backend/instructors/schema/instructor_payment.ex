@@ -1,8 +1,6 @@
 defmodule Backend.Instructors.Schema.InstructorPayment do
-  use Ecto.Schema
-  import Ecto.Changeset
+  use Backend, :schema
 
-  @primary_key {:id, :binary_id, autogenerate: true}
   schema "instructor_payments" do
     field :amount, :decimal
     field :currency, :string
@@ -10,12 +8,10 @@ defmodule Backend.Instructors.Schema.InstructorPayment do
     field :status, Backend.Instructors.Payments.TransactionStatus
     field :type, Backend.Instructors.Payments.TransactionType
 
-    belongs_to(:instructor, Backend.Instructors.Schema.Instructor, type: :binary_id)
-    belongs_to(:course, Backend.Instructors.Schema.Course, type: :binary_id)
+    belongs_to :instructor, Backend.Instructors.Schema.Instructor
+    belongs_to :course, Backend.Instructors.Schema.Course
 
-    belongs_to(:payment_integration, Backend.Instructors.Schema.PaymentIntegration,
-      type: :binary_id
-    )
+    belongs_to :payment_integration, Backend.Instructors.Schema.PaymentIntegration
 
     timestamps()
   end

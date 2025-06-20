@@ -1,6 +1,5 @@
 defmodule Backend.Instructors.Schema.Course.Lesson do
-  use Ecto.Schema
-  import Ecto.Changeset
+  use Backend, :schema
 
   @derive {Jason.Encoder,
            only: [
@@ -14,14 +13,13 @@ defmodule Backend.Instructors.Schema.Course.Lesson do
              :inserted_at,
              :updated_at
            ]}
-  @primary_key {:id, :binary_id, autogenerate: true}
   schema "course_lessons" do
     field :title, :string
     field :order_index, :integer
     field :type, Backend.Instructors.Course.Lesson.Type
 
-    belongs_to :course, Backend.Instructors.Schema.Course, type: :binary_id
-    belongs_to :module, Backend.Instructors.Schema.Course.Module, type: :binary_id
+    belongs_to :course, Backend.Instructors.Schema.Course
+    belongs_to :module, Backend.Instructors.Schema.Course.Module
 
     has_one :video_details, Backend.Instructors.Schema.Course.Lesson.Video,
       foreign_key: :lesson_id

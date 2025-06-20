@@ -1,6 +1,5 @@
 defmodule Backend.Instructors.Schema.Course do
-  use Ecto.Schema
-  import Ecto.Changeset
+  use Backend, :schema
 
   @derive {Jason.Encoder,
            only: [
@@ -15,7 +14,6 @@ defmodule Backend.Instructors.Schema.Course do
              :inserted_at,
              :updated_at
            ]}
-  @primary_key {:id, :binary_id, autogenerate: true}
   schema "courses" do
     field :name, :string
     field :description, :string
@@ -24,10 +22,9 @@ defmodule Backend.Instructors.Schema.Course do
     field :currency, :string
     field :public_path, :string
 
-    belongs_to :project, Backend.Instructors.Schema.Project, type: :binary_id
+    belongs_to :project, Backend.Instructors.Schema.Project
 
     belongs_to :payment_integration, Backend.Instructors.Schema.PaymentIntegration,
-      type: :binary_id,
       foreign_key: :payment_integration_id
 
     has_many :modules, Backend.Instructors.Schema.Course.Module, foreign_key: :course_id

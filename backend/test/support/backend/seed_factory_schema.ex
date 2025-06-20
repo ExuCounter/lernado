@@ -120,6 +120,8 @@ defmodule Backend.SeedFactorySchema do
     produce(:payment_integration)
   end
 
+  # different payment integration
+
   command :enable_payments_for_course do
     param(:payment_integration, entity: :payment_integration)
     param(:course, entity: :course)
@@ -147,5 +149,65 @@ defmodule Backend.SeedFactorySchema do
     end)
 
     update(:course)
+  end
+
+  trait :with_payments_enabled, :course do
+    exec(:enable_payments_for_course)
+  end
+
+  trait :with_info_provided, :course do
+    from(:with_payments_enabled)
+
+    exec(:update_course,
+      args_pattern: %{public_path: "course_path", currency: "USD", price: 100.0}
+    )
+  end
+
+  trait :published, :course do
+    from(:with_info_provided)
+    exec(:publish_course)
+  end
+
+  command :create_student do
+    param(:user, entity: :user)
+
+    resolve(fn args ->
+      with {:ok, student} <- args.user |> Backend.Students.create_student() do
+        {:ok, %{student: student}}
+      end
+    end)
+
+    produce(:student)
+  end
+
+  command :create_student_enrollment do
+    param(:student, entity: :student)
+    param(:course, entity: :course)
+
+    resolve(fn args ->
+      with {:ok, enrollment} <-
+             args.student |> Backend.Students.create_enrollment(args.course) do
+        {:ok, %{student_enrollment: enrollment}}
+      end
+    end)
+
+    produce(:student_enrollment)
+  end
+
+  command :create_student_payment do
+    param(:student, entity: :student)
+    param(:course, entity: :course)
+    param(:amount, value: 100.0)
+    param(:currency, value: "USD")
+    param(:payment_status, value: :succeeded)
+
+    resolve(fn args ->
+      with {:ok, payment} <-
+             args.student |> Backend.Students.create_payment(args.course, args) do
+        {:ok, %{student_payment: payment}}
+      end
+    end)
+
+    produce(:student_payment)
   end
 end

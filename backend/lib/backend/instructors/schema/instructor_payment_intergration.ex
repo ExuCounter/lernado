@@ -1,13 +1,11 @@
 defmodule Backend.Instructors.Schema.PaymentIntegration do
-  use Ecto.Schema
-  import Ecto.Changeset
+  use Backend, :schema
 
-  @primary_key {:id, :binary_id, autogenerate: true}
   schema "instructor_payment_integrations" do
     field :provider, Ecto.Enum, values: [:liqpay]
     field :credentials, :map
 
-    belongs_to :instructor, Backend.Instructors.Schema.Instructor, type: :binary_id
+    belongs_to :instructor, Backend.Instructors.Schema.Instructor
 
     has_many :payments, Backend.Instructors.Schema.InstructorPayment,
       foreign_key: :payment_integration_id
