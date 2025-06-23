@@ -17,12 +17,11 @@ defmodule Backend.Instructors.Schema.PaymentIntegration do
 
   def create_changeset(instructor, attrs) do
     %__MODULE__{
-      instructor_id: instructor.id,
       credentials: %{}
     }
-    |> cast(attrs, [:provider, :instructor_id, :credentials])
+    |> cast(attrs, [:provider, :credentials])
     |> validate_required([:provider, :credentials])
-    |> foreign_key_constraint(:instructor_id)
+    |> put_assoc(:instructor, instructor)
   end
 
   def update_changeset(integration, attrs) do

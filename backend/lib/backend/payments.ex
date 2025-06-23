@@ -7,16 +7,6 @@ defmodule Backend.Payments do
     Backend.Repo.find_by_id(Backend.Instructors.Schema.PaymentIntegration, id)
   end
 
-  def find_course_payment_integration(course) do
-    case course.payment_integration_id do
-      nil ->
-        {:error, %{status: :not_found, message: "Payment integration is not found."}}
-
-      payment_integration_id ->
-        find_payment_integration_by_id(payment_integration_id)
-    end
-  end
-
   def find_enabled_payment_integration_by_instructor_id(id) do
     payment_integration =
       id |> Backend.Payments.Queries.enabled_payment_integrations() |> Backend.Repo.one()
@@ -34,17 +24,17 @@ defmodule Backend.Payments do
     integration |> Map.get(:credentials)
   end
 
-  defp create_pending_course_payment(course, payment_integration) do
+  defp create_pending_course_payment(course) do
     params = %{
       currency: course.currency,
       amount: course.price,
-      status: :pending,
-      type: :course_payment_from_student
+      payment_status: :pending,
+      payment_type: :course_payment_from_student
     }
 
     Backend.Instructors.Schema.InstructorPayment.create_changeset(
       course,
-      payment_integration,
+      course.payment_integration,
       params
     )
     |> Backend.Repo.insert()
@@ -69,14 +59,14 @@ defmodule Backend.Payments do
              private_key: credentials.private_key
            }) do
       params = %{
-        status: data.status
+        payment_status: data.status
       }
 
       Backend.Instructors.Schema.InstructorPayment.update_changeset(payment, params)
     end
   end
 
-  def course_needs_payment_form(course) do
+  def ensure_course_needs_payment_form(course) do
     if Decimal.compare(course.price, 0) == :gt do
       :ok
     else
@@ -85,14 +75,13 @@ defmodule Backend.Payments do
   end
 
   def request_course_payment_form(course, user) do
-    course = Backend.Repo.preload(course, :project)
+    course = Backend.Repo.preload(course, [:project, :payment_integration])
 
-    with :ok <- course_needs_payment_form(course),
+    with :ok <- ensure_course_needs_payment_form(course),
          :ok <- Backend.Instructors.ensure_course_published(course),
-         {:ok, payment_integration} <- find_course_payment_integration(course),
-         credentials = retrieve_payment_integration_credentials(payment_integration),
-         {:ok, payment} <- create_pending_course_payment(course, payment_integration) do
-      case payment_integration do
+         credentials = retrieve_payment_integration_credentials(course.payment_integration),
+         {:ok, payment} <- create_pending_course_payment(course) do
+      case course.payment_integration do
         %{provider: :liqpay} ->
           params = %{
             action: "pay",

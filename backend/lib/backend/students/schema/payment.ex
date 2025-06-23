@@ -17,6 +17,7 @@ defmodule Backend.Students.Schema.Payment do
     belongs_to :course, Backend.Instructors.Schema.Course
 
     belongs_to :payment_integration, Backend.Instructors.Schema.PaymentIntegration
+    belongs_to :instructor_payment, Backend.Instructors.Schema.InstructorPayment
 
     timestamps()
   end
