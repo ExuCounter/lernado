@@ -20,6 +20,7 @@ defmodule Backend.Users.Schema.User do
     field :preferred_currency, :string
 
     has_one :instructor, Backend.Instructors.Schema.Instructor
+    has_one :student, Backend.Students.Schema.Student
 
     timestamps()
   end

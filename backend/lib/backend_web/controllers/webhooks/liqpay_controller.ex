@@ -11,12 +11,8 @@ defmodule BackendWeb.Webhooks.LiqPayController do
       conn
       |> put_status(200)
       |> json(%{
-        message: "Payment processed successfully"
+        message: "Payment processed successfully."
       })
-    else
-      a ->
-        dbg(a)
-        # {:error, :invalid_signature} -> {:error, "Invalid signature."}
     end
   end
 end

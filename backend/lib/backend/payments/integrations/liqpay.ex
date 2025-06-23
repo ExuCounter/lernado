@@ -7,7 +7,7 @@ defmodule Backend.Payments.Integrations.LiqPay do
 
   def checkout_url(), do: @checkout_url
 
-  defp create_signature(data, private_key) do
+  def create_signature(data, private_key) do
     hash_data = private_key <> data <> private_key
 
     :crypto.hash(:sha, hash_data)
@@ -27,7 +27,7 @@ defmodule Backend.Payments.Integrations.LiqPay do
 
       {:ok, data}
     else
-      {:error, :invalid_signature}
+      {:error, %{message: "Invalid signature.", status: :invalid_field}}
     end
   end
 
@@ -42,7 +42,7 @@ defmodule Backend.Payments.Integrations.LiqPay do
       |> Jason.encode!()
       |> Base.encode64()
 
-    signature = create_signature(keys["private_key"], data)
+    signature = create_signature(data, keys["private_key"])
 
     %{
       data: data,

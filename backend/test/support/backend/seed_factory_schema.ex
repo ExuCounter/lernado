@@ -107,7 +107,14 @@ defmodule Backend.SeedFactorySchema do
   command :create_payment_integration do
     param(:instructor, entity: :instructor)
     param(:enabled, value: false)
-    param(:credentials, value: %{})
+
+    param(:credentials,
+      value: %{
+        "public_key" => "public",
+        "private_key" => "private"
+      }
+    )
+
     param(:provider, value: :liqpay)
 
     resolve(fn args ->
@@ -194,20 +201,54 @@ defmodule Backend.SeedFactorySchema do
     produce(:student_enrollment)
   end
 
-  command :create_student_payment do
-    param(:student, entity: :student)
-    param(:course, entity: :course)
-    param(:amount, value: 100.0)
-    param(:currency, value: "USD")
-    param(:payment_status, value: :succeeded)
+  command :create_instructor_payment do
+    param(:course, entity: :course, with_traits: [:published])
 
     resolve(fn args ->
       with {:ok, payment} <-
-             args.student |> Backend.Students.create_payment(args.course, args) do
+             Backend.Payments.create_instructor_course_payment_pending(args.course) do
+        {:ok, %{instructor_payment: payment}}
+      end
+    end)
+
+    produce(:instructor_payment)
+  end
+
+  command :create_student_payment do
+    param(:student, entity: :student)
+    param(:course, entity: :course, with_traits: [:published])
+    param(:instructor_payment, entity: :instructor_payment)
+
+    resolve(fn args ->
+      with {:ok, payment} <-
+             args.student
+             |> Backend.Payments.create_student_course_payment_pending(
+               args.course,
+               args.instructor_payment
+             ) do
         {:ok, %{student_payment: payment}}
       end
     end)
 
     produce(:student_payment)
   end
+
+  # command :request_payment_form do
+  #   param(:student, entity: :student)
+  #   param(:course, entity: :course, with_traits: [:published])
+
+  #   resolve(fn args ->
+  #     with {:ok, payment} <-
+  #            args.student
+  #            |> Backend.Payments.create_student_course_payment_pending(
+  #              args.course,
+  #              args.instructor_payment
+  #            ) do
+  #       {:ok, %{student_payment: payment}}
+  #     end
+  #   end)
+
+  #   produce(:student_payment)
+
+  # end
 end

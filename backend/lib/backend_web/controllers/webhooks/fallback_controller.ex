@@ -5,6 +5,9 @@ defmodule BackendWeb.Webhooks.FallbackController do
   def call(conn, {:error, :unauthorized}),
     do: conn |> put_status(401) |> json(%{message: "Unauthorized"})
 
+  def call(conn, {:error, %{message: message, status: :invalid_field}}),
+    do: conn |> put_status(422) |> json(%{message: message})
+
   def call(conn, {:error, %{message: message, status: :missing_required_field}}),
     do: conn |> put_status(422) |> json(%{message: message})
 

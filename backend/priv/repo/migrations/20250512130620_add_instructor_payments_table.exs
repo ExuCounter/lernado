@@ -8,7 +8,7 @@ defmodule Backend.Repo.Migrations.AddInstructorPaymentsTable do
 
     create table(:instructor_payments, primary_key: false) do
       add :id, :uuid, primary_key: true, default: fragment("uuid_generate_v4()")
-      add :external_id, :string
+      add :external_id, :bigint
       add :status, :instructor_payment_status, null: false
       add :amount, :decimal, precision: 10, scale: 2, null: false
       add :currency, :string, null: false, size: 3

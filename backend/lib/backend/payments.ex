@@ -1,5 +1,5 @@
 defmodule Backend.Payments do
-  def find_payment_by_id(id) do
+  def find_instructor_payment_by_id(id) do
     Backend.Repo.find_by_id(Backend.Instructors.Schema.InstructorPayment, id)
   end
 
@@ -20,11 +20,7 @@ defmodule Backend.Payments do
     end
   end
 
-  def retrieve_payment_integration_credentials(integration) do
-    integration |> Map.get(:credentials)
-  end
-
-  defp create_pending_course_payment(course) do
+  def create_instructor_course_payment_pending(course) do
     params = %{
       currency: course.currency,
       amount: course.price,
@@ -32,9 +28,28 @@ defmodule Backend.Payments do
       payment_type: :course_payment_from_student
     }
 
+    course = course |> Backend.Repo.preload(:payment_integration)
+
     Backend.Instructors.Schema.InstructorPayment.create_changeset(
       course,
       course.payment_integration,
+      params
+    )
+    |> Backend.Repo.insert()
+  end
+
+  def create_student_course_payment_pending(student, course, instructor_payment) do
+    params = %{
+      currency: course.currency,
+      amount: course.price,
+      payment_status: :pending,
+      payment_type: :course_payment_from_student
+    }
+
+    Backend.Students.Schema.StudentPayment.create_changeset(
+      student,
+      course,
+      instructor_payment,
       params
     )
     |> Backend.Repo.insert()
@@ -64,15 +79,16 @@ defmodule Backend.Payments do
     }
   end
 
+  defp base64_to_json(base64) do
+    base64
+    |> Base.decode64!()
+    |> Jason.decode!()
+  end
+
   def process_liqpay_payment(%{data: raw_data, signature: signature}) do
-    data =
-      raw_data
-      |> Base.decode64!()
-      |> Jason.decode!()
+    data = base64_to_json(raw_data)
 
-    payment_id = data["order_id"]
-
-    with {:ok, payment} <- Backend.Payments.find_payment_by_id(payment_id),
+    with {:ok, payment} <- Backend.Payments.find_instructor_payment_by_id(data["order_id"]),
          payment = Backend.Repo.preload(payment, [:course, :payment_integration]),
          credentials = Map.get(payment.payment_integration, :credentials),
          {:ok, data} <-
@@ -81,14 +97,7 @@ defmodule Backend.Payments do
              signature: signature,
              private_key: credentials["private_key"]
            }) do
-      # params = %{
-      #   payment_status: liqpay_status_mapper(data["status"]),
-      #   external_id: data["transaction_id"],
-      #   amount: Decimal.from_float(data["amount"]),
-      #   currency: data["currency"]
-      # }
       params = Backend.MapParams.map(data, :data, liqpay_payment_external_params_mapper())
-      dbg(params)
 
       with :ok <-
              Backend.Instructors.Schema.InstructorPayment.check_if_the_same_payment_data(
@@ -109,27 +118,40 @@ defmodule Backend.Payments do
     end
   end
 
-  def request_course_payment_form(course, user) do
+  def request_course_payment_form(course, student) do
     course = Backend.Repo.preload(course, [:project, :payment_integration])
 
     with :ok <- ensure_course_needs_payment_form(course),
-         :ok <- Backend.Instructors.ensure_course_published(course),
-         credentials = retrieve_payment_integration_credentials(course.payment_integration),
-         {:ok, payment} <- create_pending_course_payment(course) do
-      dbg(payment)
+         :ok <- Backend.Instructors.ensure_course_published(course) do
+      Ecto.Multi.new()
+      |> Ecto.Multi.run(:instructor_payment, fn _repo, _changes ->
+        create_instructor_course_payment_pending(course)
+      end)
+      |> Ecto.Multi.run(:student_payment, fn _repo, %{instructor_payment: instructor_payment} ->
+        create_student_course_payment_pending(student, course, instructor_payment)
+      end)
+      |> Backend.Repo.transaction()
+      |> case do
+        {:ok, %{student_payment: student_payment}} ->
+          case course.payment_integration do
+            %{provider: :liqpay} ->
+              params = %{
+                action: "pay",
+                currency: student_payment.currency,
+                amount: student_payment.amount,
+                description: "Course #{course.id} payment for #{student.id}"
+              }
 
-      case course.payment_integration do
-        %{provider: :liqpay} ->
-          params = %{
-            action: "pay",
-            currency: payment.currency,
-            amount: payment.amount,
-            description: "Course #{course.id} payment for #{user.id}"
-          }
+              credentials = course.payment_integration |> Map.get(:credentials)
 
-          form = Backend.Payments.Integrations.LiqPay.html_form(params, credentials)
+              form = Backend.Payments.Integrations.LiqPay.html_form(params, credentials)
 
-          {:ok, form}
+              {:ok, form}
+          end
+
+        {:error, error} ->
+          IO.inspect(error)
+          {:error, :bad_request}
       end
     end
   end

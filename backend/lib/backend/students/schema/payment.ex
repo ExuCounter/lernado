@@ -1,4 +1,4 @@
-defmodule Backend.Students.Schema.Payment do
+defmodule Backend.Students.Schema.StudentPayment do
   use Backend, :schema
 
   schema "student_payments" do
@@ -16,18 +16,17 @@ defmodule Backend.Students.Schema.Payment do
     belongs_to :student, Backend.Students.Schema.Student
     belongs_to :course, Backend.Instructors.Schema.Course
 
-    belongs_to :payment_integration, Backend.Instructors.Schema.PaymentIntegration
     belongs_to :instructor_payment, Backend.Instructors.Schema.InstructorPayment
 
     timestamps()
   end
 
-  def create_changeset(student, course, attrs) do
+  def create_changeset(student, course, instructor_payment, attrs) do
     %__MODULE__{}
     |> cast(attrs, [:amount, :currency, :payment_status])
     |> put_assoc(:student, student)
     |> put_assoc(:course, course)
-    |> put_assoc(:payment_integration, course.payment_integration)
-    |> validate_required([:amount, :currency, :status, :payment_method])
+    |> put_assoc(:instructor_payment, instructor_payment)
+    |> validate_required([:amount, :currency, :payment_status])
   end
 end

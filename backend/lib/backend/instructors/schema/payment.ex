@@ -4,7 +4,7 @@ defmodule Backend.Instructors.Schema.InstructorPayment do
   schema "instructor_payments" do
     field :amount, :decimal
     field :currency, :string
-    field :external_id, :binary_id
+    field :external_id, :integer
 
     field(:payment_status, Ecto.Enum,
       values: [
@@ -23,6 +23,8 @@ defmodule Backend.Instructors.Schema.InstructorPayment do
     belongs_to :course, Backend.Instructors.Schema.Course
 
     belongs_to :payment_integration, Backend.Instructors.Schema.PaymentIntegration
+
+    has_one :student_payment, Backend.Students.Schema.StudentPayment
 
     timestamps()
   end
@@ -48,13 +50,13 @@ defmodule Backend.Instructors.Schema.InstructorPayment do
          true <- payment.currency == currency do
       :ok
     else
-      _ -> {:error, :invalid_payment_data}
+      _ -> {:error, %{message: "Payment data mismatch.", status: :invalid_field}}
     end
   end
 
   def update_changeset(payment, attrs) do
     payment
-    |> cast(attrs, [:payment_status])
-    |> validate_required([:payment_status])
+    |> cast(attrs, [:payment_status, :external_id])
+    |> validate_required([:payment_status, :external_id])
   end
 end

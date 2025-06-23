@@ -3,7 +3,7 @@ defmodule Backend.Students.Schema.Student do
 
   schema "students" do
     belongs_to :user, Backend.Users.Schema.User
-    has_many :payments, Backend.Students.Schema.Payment
+    has_many :payments, Backend.Students.Schema.StudentPayment
     has_many :enrollments, Backend.Students.Schema.Enrollment
     has_many :courses, through: [:enrollments, :course]
 
