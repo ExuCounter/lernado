@@ -2,14 +2,24 @@ defmodule Backend.Instructors do
   defdelegate authorize(action, user, params), to: Backend.Instructors.Policy
   defdelegate authorize(action, user), to: Backend.Instructors.Policy
 
-  def create_instructor(user, attrs) do
-    user |> Backend.Instructors.Schema.Instructor.create_changeset(attrs) |> Backend.Repo.insert()
+  def create_instructor(user) do
+    user |> Backend.Instructors.Schema.Instructor.create_changeset() |> Backend.Repo.insert()
+  end
+
+  def create_instructor!(user) do
+    user |> Backend.Instructors.Schema.Instructor.create_changeset() |> Backend.Repo.insert!()
   end
 
   def create_project(instructor, attrs) do
     instructor
     |> Backend.Instructors.Schema.Project.create_changeset(attrs)
     |> Backend.Repo.insert()
+  end
+
+  def create_project!(instructor, attrs) do
+    instructor
+    |> Backend.Instructors.Schema.Project.create_changeset(attrs)
+    |> Backend.Repo.insert!()
   end
 
   def update_project(project, attrs) do
@@ -22,16 +32,33 @@ defmodule Backend.Instructors do
     project |> Backend.Instructors.Schema.Course.create_changeset(attrs) |> Backend.Repo.insert()
   end
 
+  def create_course!(project, attrs) do
+    project |> Backend.Instructors.Schema.Course.create_changeset(attrs) |> Backend.Repo.insert!()
+  end
+
   def update_course(course, attrs) do
     course
     |> Backend.Instructors.Schema.Course.update_changeset(attrs)
     |> Backend.Repo.update()
   end
 
+def update_course!(course, attrs) do
+    course
+    |> Backend.Instructors.Schema.Course.update_changeset(attrs)
+    |> Backend.Repo.update!()
+  end
+
+
   def publish_course(course) do
     course
     |> Backend.Instructors.Schema.Course.publish_changeset()
     |> Backend.Repo.update()
+  end
+
+  def publish_course!(course) do
+    course
+    |> Backend.Instructors.Schema.Course.publish_changeset()
+    |> Backend.Repo.update!()
   end
 
   def create_course_module(course, attrs) do
@@ -184,12 +211,22 @@ defmodule Backend.Instructors do
     |> Backend.Repo.insert()
   end
 
+  def create_payment_integration!(instructor, params) do
+    instructor
+    |> Backend.Instructors.Schema.PaymentIntegration.create_changeset(params)
+    |> Backend.Repo.insert!()
+  end
+
   def attach_payment_integration_to_course(course, integration) do
     course
-    |> Backend.Instructors.Schema.Course.update_changeset(%{
-      payment_integration_id: integration.id
-    })
+    |> Backend.Instructors.Schema.Course.update_payment_integration_changeset(integration)
     |> Backend.Repo.update()
+  end
+
+  def attach_payment_integration_to_course!(course, integration) do
+    course
+    |> Backend.Instructors.Schema.Course.update_payment_integration_changeset(integration)
+    |> Backend.Repo.update!()
   end
 
   def ensure_course_published(course) do

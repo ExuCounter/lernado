@@ -31,8 +31,9 @@ defmodule Backend.AWS.BucketsManager do
           Logger.info("AWS Bucket \"#{bucket}\" created.")
           :ok
 
-        {:error, reason} ->
-          Logger.error("Failed to create bucket #{bucket}: #{inspect(reason)}")
+        {:error, _reason} ->
+          nil
+          # Logger.error("Failed to create bucket #{bucket}: #{inspect(reason)}")
       end
     end
 

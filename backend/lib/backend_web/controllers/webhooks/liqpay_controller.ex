@@ -14,7 +14,9 @@ defmodule BackendWeb.Webhooks.LiqPayController do
         message: "Payment processed successfully"
       })
     else
-      {:error, :invalid_signature} -> {:error, "Invalid signature."}
+      a ->
+        dbg(a)
+        # {:error, :invalid_signature} -> {:error, "Invalid signature."}
     end
   end
 end

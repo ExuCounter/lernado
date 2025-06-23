@@ -40,6 +40,18 @@ defmodule Backend.Instructors.Schema.InstructorPayment do
     |> put_assoc(:payment_integration, payment_integration)
   end
 
+  def check_if_the_same_payment_data(payment, %{
+        amount: amount,
+        currency: currency
+      }) do
+    with true <- Decimal.equal?(payment.amount, amount),
+         true <- payment.currency == currency do
+      :ok
+    else
+      _ -> {:error, :invalid_payment_data}
+    end
+  end
+
   def update_changeset(payment, attrs) do
     payment
     |> cast(attrs, [:payment_status])

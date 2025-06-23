@@ -1,6 +1,6 @@
 defmodule Backend.Payments do
   def find_payment_by_id(id) do
-    Backend.Repo.find_by_id(Backend.Instructors.Payments.InstructorPayment, id: id)
+    Backend.Repo.find_by_id(Backend.Instructors.Schema.InstructorPayment, id)
   end
 
   def find_payment_integration_by_id(id) do
@@ -40,6 +40,30 @@ defmodule Backend.Payments do
     |> Backend.Repo.insert()
   end
 
+  defp liqpay_status_mapper(status) do
+    cond do
+      status in ["success", "subscribed", "unsubscribed"] ->
+        :succeeded
+
+      status in ["error", "failure"] ->
+        :failed
+
+      true ->
+        :pending
+    end
+  end
+
+  defp liqpay_payment_external_params_mapper() do
+    %{
+      data: %{
+        payment_status: [from: "status", map: &liqpay_status_mapper/1],
+        external_id: [from: "transaction_id"],
+        amount: [from: "amount", type: :decimal],
+        currency: [from: "currency"]
+      }
+    }
+  end
+
   def process_liqpay_payment(%{data: raw_data, signature: signature}) do
     data =
       raw_data
@@ -50,19 +74,30 @@ defmodule Backend.Payments do
 
     with {:ok, payment} <- Backend.Payments.find_payment_by_id(payment_id),
          payment = Backend.Repo.preload(payment, [:course, :payment_integration]),
-         {:ok, credentials} <-
-           retrieve_payment_integration_credentials(payment.payment_integration),
+         credentials = Map.get(payment.payment_integration, :credentials),
          {:ok, data} <-
            Backend.Payments.Integrations.LiqPay.verify_signature(%{
              data: raw_data,
              signature: signature,
-             private_key: credentials.private_key
+             private_key: credentials["private_key"]
            }) do
-      params = %{
-        payment_status: data.status
-      }
+      # params = %{
+      #   payment_status: liqpay_status_mapper(data["status"]),
+      #   external_id: data["transaction_id"],
+      #   amount: Decimal.from_float(data["amount"]),
+      #   currency: data["currency"]
+      # }
+      params = Backend.MapParams.map(data, :data, liqpay_payment_external_params_mapper())
+      dbg(params)
 
-      Backend.Instructors.Schema.InstructorPayment.update_changeset(payment, params)
+      with :ok <-
+             Backend.Instructors.Schema.InstructorPayment.check_if_the_same_payment_data(
+               payment,
+               params
+             ) do
+        Backend.Instructors.Schema.InstructorPayment.update_changeset(payment, params)
+        |> Backend.Repo.update()
+      end
     end
   end
 
@@ -81,6 +116,8 @@ defmodule Backend.Payments do
          :ok <- Backend.Instructors.ensure_course_published(course),
          credentials = retrieve_payment_integration_credentials(course.payment_integration),
          {:ok, payment} <- create_pending_course_payment(course) do
+      dbg(payment)
+
       case course.payment_integration do
         %{provider: :liqpay} ->
           params = %{

@@ -12,11 +12,10 @@ defmodule Backend.Instructors.Schema.Project do
   end
 
   def create_changeset(instructor, attrs) do
-    %__MODULE__{
-      instructor_id: instructor.id
-    }
+    %__MODULE__{}
     |> cast(attrs, [:name])
-    |> validate_required([:name, :instructor_id])
+    |> put_assoc(:instructor, instructor)
+    |> validate_required([:name])
     |> unique_constraint(:name)
     |> validate_length(:name, min: 6)
   end

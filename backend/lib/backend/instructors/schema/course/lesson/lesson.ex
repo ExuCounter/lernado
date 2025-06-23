@@ -16,7 +16,7 @@ defmodule Backend.Instructors.Schema.Course.Lesson do
   schema "course_lessons" do
     field :title, :string
     field :order_index, :integer
-    field :type, Backend.Instructors.Course.Lesson.Type
+    field :type, Ecto.Enum, values: [:text, :video]
 
     belongs_to :course, Backend.Instructors.Schema.Course
     belongs_to :module, Backend.Instructors.Schema.Course.Module

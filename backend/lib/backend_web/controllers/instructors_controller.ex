@@ -2,11 +2,11 @@ defmodule BackendWeb.InstructorsController do
   use BackendWeb, :controller
   action_fallback BackendWeb.FallbackController
 
-  def create_instructor(conn, params) do
+  def create_instructor(conn, _params) do
     with :ok <-
            Bodyguard.permit(Backend.Instructors, :create_instructor, conn.assigns.current_user),
          {:ok, instructor} <-
-           Backend.Instructors.create_instructor(conn.assigns.current_user, params) do
+           Backend.Instructors.create_instructor(conn.assigns.current_user) do
       instructor = Backend.Repo.preload(instructor, :user)
 
       conn

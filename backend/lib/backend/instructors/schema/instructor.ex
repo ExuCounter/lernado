@@ -11,13 +11,10 @@ defmodule Backend.Instructors.Schema.Instructor do
     timestamps()
   end
 
-  def create_changeset(user, attrs) do
-    %__MODULE__{
-      user_id: user.id
-    }
-    |> cast(attrs, [])
-    |> validate_required([:user_id])
+  def create_changeset(user) do
+    %__MODULE__{}
+    |> cast(%{}, [])
+    |> put_assoc(:user, user)
     |> unique_constraint(:user_id)
-    |> foreign_key_constraint(:user_id)
   end
 end
