@@ -13,7 +13,7 @@ defmodule Backend.Seeds do
     project = Backend.Instructors.create_project!(instructor, %{name: Faker.Lorem.sentence()})
 
     course =
-      Backend.Instructors.create_course!(project, %{name: Faker.Company.name(), price: 100})
+      Backend.Instructors.create_course!(project, %{name: Faker.Company.name(), price: 100.00})
 
     payment_integration =
       Backend.Instructors.create_payment_integration!(instructor, %{

@@ -26,12 +26,16 @@ defmodule Backend.Repo.Migrations.CreateStudentPaymentsTable do
 
     create table(:student_payments, primary_key: false) do
       add :id, :uuid, primary_key: true, default: fragment("uuid_generate_v4()")
-      add :amount, :decimal, null: false
+      add :amount, :decimal, precision: 10, scale: 2, null: false
+      add :external_id, :bigint
       add :currency, :string, null: false
       add :payment_status, :student_payment_status, null: false
       add :student_id, references(:students, type: :binary_id), null: false
       add :course_id, references(:courses, type: :binary_id), null: false
       add :instructor_payment_id, references(:instructor_payments, type: :binary_id)
+
+      add :payment_integration_id,
+          references(:instructor_payment_integrations, type: :uuid, on_delete: :nothing)
 
       timestamps()
     end

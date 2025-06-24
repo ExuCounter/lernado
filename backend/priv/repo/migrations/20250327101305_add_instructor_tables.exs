@@ -33,7 +33,7 @@ defmodule Backend.Repo.Migrations.AddInstructorTables do
       add :name, :string, null: false
       add :description, :text
       add :status, :project_status, null: false, default: "draft"
-      add :price, :decimal
+      add :price, :decimal, precision: 10, scale: 2, null: false
       add :currency, :string, size: 3
 
       timestamps()

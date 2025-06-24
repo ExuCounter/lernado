@@ -64,7 +64,8 @@ defmodule Backend.Payments.Integrations.LiqPay do
             action: String.t(),
             amount: number(),
             currency: String.t(),
-            description: String.t()
+            description: String.t(),
+            order_id: String.t()
           },
           %{
             public_key: String.t(),

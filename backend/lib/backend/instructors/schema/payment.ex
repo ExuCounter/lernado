@@ -30,28 +30,16 @@ defmodule Backend.Instructors.Schema.InstructorPayment do
   end
 
   def create_changeset(course, payment_integration, attrs) do
-    project = Backend.Repo.preload(course.project, :instructor)
-
-    %__MODULE__{}
+    %__MODULE__{
+      instructor_id: payment_integration.instructor_id
+    }
     |> cast(attrs, [:amount, :currency, :payment_status, :payment_type])
     |> validate_required([:amount, :currency, :payment_status, :payment_type])
     |> validate_number(:amount, greater_than: 0)
     |> validate_length(:currency, is: 3)
     |> put_assoc(:course, course)
-    |> put_assoc(:instructor, project.instructor)
     |> put_assoc(:payment_integration, payment_integration)
-  end
-
-  def check_if_the_same_payment_data(payment, %{
-        amount: amount,
-        currency: currency
-      }) do
-    with true <- Decimal.equal?(payment.amount, amount),
-         true <- payment.currency == currency do
-      :ok
-    else
-      _ -> {:error, %{message: "Payment data mismatch.", status: :invalid_field}}
-    end
+    |> foreign_key_constraint(:instructor_id)
   end
 
   def update_changeset(payment, attrs) do

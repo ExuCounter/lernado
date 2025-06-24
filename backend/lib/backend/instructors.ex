@@ -29,7 +29,9 @@ defmodule Backend.Instructors do
   end
 
   def create_course(project, attrs) do
-    project |> Backend.Instructors.Schema.Course.create_changeset(attrs) |> Backend.Repo.insert()
+    project
+    |> Backend.Instructors.Schema.Course.create_changeset(attrs)
+    |> Backend.Repo.insert()
   end
 
   def create_course!(project, attrs) do
@@ -42,12 +44,11 @@ defmodule Backend.Instructors do
     |> Backend.Repo.update()
   end
 
-def update_course!(course, attrs) do
+  def update_course!(course, attrs) do
     course
     |> Backend.Instructors.Schema.Course.update_changeset(attrs)
     |> Backend.Repo.update!()
   end
-
 
   def publish_course(course) do
     course

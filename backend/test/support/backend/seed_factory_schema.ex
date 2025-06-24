@@ -201,41 +201,23 @@ defmodule Backend.SeedFactorySchema do
     produce(:student_enrollment)
   end
 
-  command :create_instructor_payment do
-    param(:course, entity: :course, with_traits: [:published])
+  # command :create_instructor_payment do
+  #   param(:course, entity: :course, with_traits: [:published])
 
-    resolve(fn args ->
-      with {:ok, payment} <-
-             Backend.Payments.create_instructor_course_payment_pending(args.course) do
-        {:ok, %{instructor_payment: payment}}
-      end
-    end)
+  #   resolve(fn args ->
+  #     with {:ok, payment} <-
+  #            Backend.Payments.create_instructor_course_payment_pending(args.course) do
+  #       {:ok, %{instructor_payment: payment}}
+  #     end
+  #   end)
 
-    produce(:instructor_payment)
-  end
+  #   produce(:instructor_payment)
+  # end
 
-  command :create_student_payment do
-    param(:student, entity: :student)
-    param(:course, entity: :course, with_traits: [:published])
-    param(:instructor_payment, entity: :instructor_payment)
-
-    resolve(fn args ->
-      with {:ok, payment} <-
-             args.student
-             |> Backend.Payments.create_student_course_payment_pending(
-               args.course,
-               args.instructor_payment
-             ) do
-        {:ok, %{student_payment: payment}}
-      end
-    end)
-
-    produce(:student_payment)
-  end
-
-  # command :request_payment_form do
+  # command :create_student_payment do
   #   param(:student, entity: :student)
   #   param(:course, entity: :course, with_traits: [:published])
+  #   param(:instructor_payment, entity: :instructor_payment)
 
   #   resolve(fn args ->
   #     with {:ok, payment} <-
@@ -249,6 +231,22 @@ defmodule Backend.SeedFactorySchema do
   #   end)
 
   #   produce(:student_payment)
-
   # end
+
+  command :request_course_payment_form do
+    param(:student, entity: :student)
+    param(:course, entity: :course, with_traits: [:published])
+
+    resolve(fn args ->
+      with {:ok, %{student_payment: student_payment}} <-
+             Backend.Payments.request_course_payment_form(
+               args.course,
+               args.student
+             ) do
+        {:ok, %{student_payment: student_payment}}
+      end
+    end)
+
+    produce(:student_payment)
+  end
 end

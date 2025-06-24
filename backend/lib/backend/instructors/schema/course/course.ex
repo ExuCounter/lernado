@@ -33,7 +33,7 @@ defmodule Backend.Instructors.Schema.Course do
 
   def create_changeset(project, attrs) do
     %__MODULE__{
-      price: 0.0,
+      price: 0.00,
       currency: "USD",
       description: "",
       status: :draft
