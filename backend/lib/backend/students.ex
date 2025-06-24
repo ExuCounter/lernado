@@ -17,9 +17,9 @@ defmodule Backend.Students do
     |> Backend.Repo.insert()
   end
 
-  def create_payment(student, course, instructor_payment, attrs) do
+  def create_payment(student, course, attrs) do
     student
-    |> Backend.Students.Schema.StudentPayment.create_changeset(course, instructor_payment, attrs)
+    |> Backend.Students.Schema.StudentPayment.create_changeset(course, attrs)
     |> Backend.Repo.insert()
   end
 end

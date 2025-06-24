@@ -21,12 +21,17 @@ defmodule Backend.Students.Schema.StudentPayment do
     timestamps()
   end
 
-  def create_changeset(student, course, instructor_payment, attrs) do
+  def create_changeset(student, course, attrs) do
     %__MODULE__{}
     |> cast(attrs, [:amount, :currency, :payment_status])
     |> put_assoc(:student, student)
     |> put_assoc(:course, course)
-    |> put_assoc(:instructor_payment, instructor_payment)
     |> validate_required([:amount, :currency, :payment_status])
+  end
+
+  def link_instructor_payment_changeset(student_payment, instructor_payment) do
+    student_payment
+    |> cast(%{}, [])
+    |> put_assoc(:instructor_payment, instructor_payment)
   end
 end

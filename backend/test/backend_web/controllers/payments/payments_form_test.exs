@@ -22,6 +22,7 @@ defmodule BackendWeb.PaymentsTest do
       ctx
       |> produce([
         :user,
+        :student,
         conn: [:user_session]
       ])
 

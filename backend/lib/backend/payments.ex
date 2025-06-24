@@ -38,7 +38,7 @@ defmodule Backend.Payments do
     |> Backend.Repo.insert()
   end
 
-  def create_student_course_payment_pending(student, course, instructor_payment) do
+  def create_student_course_payment_pending(student, course) do
     params = %{
       currency: course.currency,
       amount: course.price,
@@ -49,7 +49,6 @@ defmodule Backend.Payments do
     Backend.Students.Schema.StudentPayment.create_changeset(
       student,
       course,
-      instructor_payment,
       params
     )
     |> Backend.Repo.insert()
@@ -124,11 +123,8 @@ defmodule Backend.Payments do
     with :ok <- ensure_course_needs_payment_form(course),
          :ok <- Backend.Instructors.ensure_course_published(course) do
       Ecto.Multi.new()
-      |> Ecto.Multi.run(:instructor_payment, fn _repo, _changes ->
-        create_instructor_course_payment_pending(course)
-      end)
-      |> Ecto.Multi.run(:student_payment, fn _repo, %{instructor_payment: instructor_payment} ->
-        create_student_course_payment_pending(student, course, instructor_payment)
+      |> Ecto.Multi.run(:student_payment, fn _repo, _changes ->
+        create_student_course_payment_pending(student, course)
       end)
       |> Backend.Repo.transaction()
       |> case do
