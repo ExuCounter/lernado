@@ -33,7 +33,7 @@ defmodule Backend.Instructors.Schema.InstructorPayment do
     %__MODULE__{
       instructor_id: payment_integration.instructor_id
     }
-    |> cast(attrs, [:amount, :currency, :payment_status, :payment_type])
+    |> cast(attrs, [:amount, :currency, :payment_status, :payment_type, :external_id])
     |> validate_required([:amount, :currency, :payment_status, :payment_type])
     |> validate_number(:amount, greater_than: 0)
     |> validate_length(:currency, is: 3)

@@ -56,11 +56,19 @@ defmodule Backend.Students.Schema.StudentPayment do
     |> put_assoc(:instructor_payment, instructor_payment)
   end
 
+  def convert_to_decimal(value) when is_float(value) do
+    Decimal.from_float(value)
+  end
+
+  def convert_to_decimal(value) do
+    Decimal.new(value)
+  end
+
   def check_if_the_same_payment_data(payment, %{
         amount: amount,
         currency: currency
       }) do
-    with true <- Decimal.equal?(payment.amount, amount),
+    with true <- Decimal.equal?(payment.amount, convert_to_decimal(amount)),
          true <- payment.currency == currency do
       :ok
     else

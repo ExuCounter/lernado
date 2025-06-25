@@ -38,6 +38,12 @@ defmodule BackendWeb.PaymentsControllerTest do
   # "version" => 3
   # }
 
+  defp map_to_base64(map) do
+    map
+    |> Jason.encode!()
+    |> Base.encode64()
+  end
+
   describe "liqpay payment" do
     setup ctx do
       ctx
@@ -47,14 +53,14 @@ defmodule BackendWeb.PaymentsControllerTest do
 
     test "success", ctx do
       data = %{
-        order_id: %{id: ctx.student_payment.id, type: :student},
+        order_id: %{id: ctx.student_payment.id, type: :student} |> map_to_base64(),
         status: "success",
         amount: ctx.course.price,
         currency: ctx.course.currency,
         transaction_id: Faker.random_between(1, 1_000_000_000)
       }
 
-      base64_data = data |> Jason.encode!() |> Base.encode64()
+      base64_data = data |> map_to_base64()
 
       credentials = ctx.payment_integration |> Map.get(:credentials)
 
@@ -78,26 +84,84 @@ defmodule BackendWeb.PaymentsControllerTest do
         ctx.student_payment |> Backend.Repo.reload!() |> Backend.Repo.preload(:instructor_payment)
 
       assert student_payment.payment_status == :succeeded
-      assert student_payment.amount == data.amount
+      assert Decimal.compare(student_payment.amount, data.amount) == :eq
       assert student_payment.currency == data.currency
       assert student_payment.external_id == data.transaction_id
 
       assert student_payment.instructor_payment.payment_status == :succeeded
-      assert student_payment.instructor_payment.amount == data.amount
+      assert Decimal.compare(student_payment.instructor_payment.amount, data.amount) == :eq
       assert student_payment.instructor_payment.currency == data.currency
       assert student_payment.instructor_payment.external_id == data.transaction_id
     end
 
     test "failure due to payment data mismatch", ctx do
       data = %{
-        order_id: %{id: ctx.student_payment.id, type: :student},
+        order_id: %{id: ctx.student_payment.id, type: :student} |> map_to_base64(),
         status: "success",
         amount: "200.00",
         currency: "UAH",
         transaction_id: Faker.random_between(1, 1_000_000_000)
       }
 
-      base64_data = data |> Jason.encode!() |> Base.encode64()
+      base64_data = data |> map_to_base64()
+
+      credentials = ctx.payment_integration |> Map.get(:credentials)
+
+      signature =
+        Backend.Payments.Integrations.LiqPay.create_signature(
+          base64_data,
+          credentials["private_key"]
+        )
+
+      conn =
+        post(ctx.conn, ~p"/webhooks/liqpay/update", %{
+          "data" => data |> Jason.encode!() |> Base.encode64(),
+          "signature" => signature
+        })
+
+      assert json_response(conn, 422) == %{
+               "message" => "Payment data mismatch."
+             }
+
+      student_payment =
+        ctx.student_payment |> Backend.Repo.reload!() |> Backend.Repo.preload(:instructor_payment)
+
+      assert student_payment.instructor_payment == nil
+      assert student_payment.payment_status == :pending
+    end
+
+    test "failure due to signature mismatch", ctx do
+      data = %{
+        order_id: %{id: ctx.student_payment.id, type: :student} |> map_to_base64(),
+        status: "success",
+        amount: "200.00",
+        currency: "UAH",
+        transaction_id: Faker.random_between(1, 1_000_000_000)
+      }
+
+      signature = "WRONG SIGNATURE"
+
+      conn =
+        post(ctx.conn, ~p"/webhooks/liqpay/update", %{
+          "data" => data |> Jason.encode!() |> Base.encode64(),
+          "signature" => signature
+        })
+
+      assert json_response(conn, 422) == %{
+               "message" => "Invalid signature."
+             }
+    end
+
+    test "failure from provided", ctx do
+      data = %{
+        order_id: %{id: ctx.student_payment.id, type: :student} |> map_to_base64(),
+        status: "failure",
+        amount: ctx.course.price,
+        currency: ctx.course.currency,
+        transaction_id: Faker.random_between(1, 1_000_000_000)
+      }
+
+      base64_data = data |> map_to_base64()
 
       credentials = ctx.payment_integration |> Map.get(:credentials)
 
@@ -116,28 +180,12 @@ defmodule BackendWeb.PaymentsControllerTest do
       assert json_response(conn, 200) == %{
                "message" => "Payment processed successfully."
              }
+
+      student_payment =
+        ctx.student_payment |> Backend.Repo.reload!() |> Backend.Repo.preload(:instructor_payment)
+
+      assert student_payment.instructor_payment == nil
+      assert student_payment.payment_status == :failed
     end
-
-    # test "failure due to signature mismatch", ctx do
-    #   data = %{
-    #     order_id: ctx.instructor_payment.id,
-    #     status: "success",
-    #     amount: "200.00",
-    #     currency: "UAH",
-    #     transaction_id: Faker.random_between(1, 1_000_000_000)
-    #   }
-
-    #   signature = "WRONG SIGNATURE"
-
-    #   conn =
-    #     post(ctx.conn, ~p"/webhooks/liqpay/update", %{
-    #       "data" => data |> Jason.encode!() |> Base.encode64(),
-    #       "signature" => signature
-    #     })
-
-    #   assert json_response(conn, 422) == %{
-    #            "message" => "Invalid signature."
-    #          }
-    # end
   end
 end

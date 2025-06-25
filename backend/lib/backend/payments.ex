@@ -1,4 +1,6 @@
 defmodule Backend.Payments do
+  require Logger
+
   def find_instructor_payment_by_id(id) do
     Backend.Repo.find_by_id(Backend.Instructors.Schema.InstructorPayment, id)
   end
@@ -98,6 +100,12 @@ defmodule Backend.Payments do
     |> Jason.decode!()
   end
 
+  defp map_to_base64(map) do
+    map
+    |> Jason.encode!()
+    |> Base.encode64()
+  end
+
   def process_liqpay_student_payment(
         data,
         %Backend.Students.Schema.StudentPayment{} = student_payment
@@ -132,7 +140,11 @@ defmodule Backend.Payments do
     end)
     |> Ecto.Multi.run(:create_instructor_payment, fn _repo,
                                                      %{update_student_payment: student_payment} ->
-      create_instructor_course_payment_from_student_payment(student_payment)
+      if student_payment.payment_status == :succeeded do
+        create_instructor_course_payment_from_student_payment(student_payment)
+      else
+        {:ok, nil}
+      end
     end)
     |> Ecto.Multi.run(:link_instructor_payment_to_student_payment, fn _repo,
                                                                       %{
@@ -141,27 +153,34 @@ defmodule Backend.Payments do
                                                                         update_student_payment:
                                                                           student_payment
                                                                       } ->
-      student_payment
-      |> Backend.Repo.preload(:instructor_payment)
-      |> Backend.Students.Schema.StudentPayment.link_instructor_payment_changeset(
-        instructor_payment
-      )
-      |> Backend.Repo.update()
+      student_payment = student_payment |> Backend.Repo.preload(:instructor_payment)
+
+      if is_nil(student_payment.instructor_payment) do
+        Backend.Students.Schema.StudentPayment.link_instructor_payment_changeset(
+          student_payment,
+          instructor_payment
+        )
+        |> Backend.Repo.update()
+      else
+        {:ok, nil}
+      end
     end)
     |> Backend.Repo.transaction()
     |> case do
       {:ok, %{link_instructor_payment_to_student_payment: student_payment}} ->
         {:ok, student_payment}
 
-      {:error, error} ->
+      {:error, _step, error, _changes} ->
+        Logger.info(error)
         {:error, error}
     end
   end
 
   def process_liqpay_payment(%{data: raw_data, signature: signature}) do
     data = base64_to_json(raw_data)
+    order_id = base64_to_json(data["order_id"])
 
-    with {:ok, payment} <- Backend.Payments.find_payment_by_type(data["order_id"]),
+    with {:ok, payment} <- Backend.Payments.find_payment_by_type(order_id),
          payment = Backend.Repo.preload(payment, [:course, :payment_integration]),
          credentials = Map.get(payment.payment_integration, :credentials),
          {:ok, data} <-
@@ -206,7 +225,7 @@ defmodule Backend.Payments do
                     id: student_payment.id,
                     type: :student
                   }
-                  |> Jason.encode!()
+                  |> map_to_base64()
               }
 
               credentials = course.payment_integration |> Map.get(:credentials)
@@ -220,8 +239,7 @@ defmodule Backend.Payments do
                }}
           end
 
-        {:error, error} ->
-          IO.inspect(error)
+        {:error, _error} ->
           {:error, :bad_request}
       end
     end
