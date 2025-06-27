@@ -16,8 +16,4 @@ defmodule Backend.AWS do
   def list_objects(bucket) do
     config(:dispatcher).list_objects(bucket)
   end
-
-  def create_bucket_if_not_exists(bucket) do
-    config(:dispatcher).create_bucket_if_not_exists(bucket)
-  end
 end

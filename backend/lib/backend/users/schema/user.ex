@@ -41,6 +41,7 @@ defmodule Backend.Users.Schema.User do
     }
     |> cast(attrs, [:first_name, :last_name, :password, :email, :preferred_currency])
     |> hash_password()
+    |> put_change(:password, nil)
     |> validate_required([:first_name, :last_name, :email, :password_hash, :preferred_currency])
     |> unique_constraint(:email)
   end

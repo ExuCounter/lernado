@@ -11,7 +11,6 @@ defmodule Backend.Application do
       BackendWeb.Telemetry,
       Backend.Repo,
       {DNSCluster, query: Application.get_env(:backend, :dns_cluster_query) || :ignore},
-      Backend.AWS.BucketsManager,
       {Phoenix.PubSub, name: Backend.PubSub},
       # Start the Finch HTTP client for sending emails
       {Finch, name: Backend.Finch},

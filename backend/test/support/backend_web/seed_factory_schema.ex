@@ -23,9 +23,52 @@ defmodule BackendWeb.SeedFactorySchema do
     update(:conn)
   end
 
+  command :create_pending_role_session do
+    param(:user, entity: :user)
+    param(:conn, entity: :conn, with_traits: [:unauthenticated])
+
+    resolve(fn args ->
+      {:ok, %{conn: BackendWeb.SessionHelpers.init_user_session(args.conn, args.user)}}
+    end)
+
+    update(:conn)
+  end
+
+  command :create_student_session do
+    param(:student, entity: :student)
+    param(:conn, entity: :conn, with_traits: [:unauthenticated])
+
+    resolve(fn args ->
+      {:ok, %{conn: BackendWeb.SessionHelpers.init_user_session(args.conn, args.student)}}
+    end)
+
+    update(:conn)
+  end
+
+  command :create_instructor_session do
+    param(:instructor, entity: :instructor)
+    param(:conn, entity: :conn, with_traits: [:unauthenticated])
+
+    resolve(fn args ->
+      {:ok, %{conn: BackendWeb.SessionHelpers.init_user_session(args.conn, args.instructor)}}
+    end)
+
+    update(:conn)
+  end
+
   trait :user_session, :conn do
     from(:unauthenticated)
     exec(:create_user_session)
+  end
+
+  trait :student_session, :conn do
+    from(:unauthenticated)
+    exec(:create_student_session)
+  end
+
+  trait :instructor_session, :conn do
+    from(:unauthenticated)
+    exec(:create_instructor_session)
   end
 
   trait :unauthenticated, :conn do
