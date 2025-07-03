@@ -3,7 +3,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
 
   describe "instructors" do
     test "create instructor", ctx do
-      ctx = ctx |> produce([:user, conn: [:user_session]])
+      ctx = ctx |> produce([:user, conn: [:pending_user_session]])
 
       conn = post(ctx.conn, ~p"/api/instructors/create", %{})
 
@@ -19,7 +19,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
     end
 
     test "create instructor project", ctx do
-      ctx = ctx |> produce([:user, :instructor, conn: [:user_session]])
+      ctx = ctx |> produce([:user, :instructor, conn: [:instructor_user_session]])
 
       name = Faker.Company.name()
 
@@ -37,7 +37,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
     end
 
     test "update own project", ctx do
-      ctx = ctx |> produce([:user, :instructor, :project, conn: [:user_session]])
+      ctx = ctx |> produce([:user, :instructor, :project, conn: [:instructor_user_session]])
 
       name = Faker.Company.name()
 
@@ -70,7 +70,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
 
     test "update stranger project", ctx do
       ctx1 = ctx |> produce([:user, :instructor, :project])
-      ctx2 = ctx |> produce([:user, :instructor, conn: [:user_session]])
+      ctx2 = ctx |> produce([:user, :instructor, conn: [:instructor_user_session]])
 
       conn =
         put(ctx2.conn, ~p"/api/instructors/projects/update", %{
@@ -82,7 +82,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
     end
 
     test "create course", ctx do
-      ctx = ctx |> produce([:user, :instructor, :project, conn: [:user_session]])
+      ctx = ctx |> produce([:user, :instructor, :project, conn: [:instructor_user_session]])
 
       name = Faker.Company.name()
       project_id = ctx.project.id
@@ -140,7 +140,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           :instructor,
           :project,
           :course,
-          conn: [:user_session]
+          conn: [:instructor_user_session]
         ])
 
       conn =
@@ -165,7 +165,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           :instructor,
           :project,
           :course,
-          conn: [:user_session]
+          conn: [:instructor_user_session]
         ])
 
       conn =
@@ -180,7 +180,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
 
     test "update stanger course", ctx do
       ctx1 = ctx |> produce([:user, :instructor, :project, :course])
-      ctx2 = ctx |> produce([:user, conn: [:user_session]])
+      ctx2 = ctx |> produce([:user, conn: [:instructor_user_session]])
 
       conn =
         put(ctx2.conn, ~p"/api/instructors/courses/update", %{
@@ -199,7 +199,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           :instructor,
           :project,
           :course,
-          conn: [:user_session]
+          conn: [:instructor_user_session]
         ])
 
       course_id = ctx.course.id
@@ -257,7 +257,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           :instructor,
           :project,
           :course,
-          conn: [:user_session]
+          conn: [:instructor_user_session]
         ])
 
       conn =
@@ -281,7 +281,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           :course_module
         ])
 
-      ctx2 = ctx |> produce([:user, conn: [:user_session]])
+      ctx2 = ctx |> produce([:user, conn: [:instructor_user_session]])
 
       conn =
         put(ctx2.conn, ~p"/api/instructors/courses/modules/update", %{
@@ -302,7 +302,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           :project,
           :course,
           :course_module,
-          conn: [:user_session]
+          conn: [:instructor_user_session]
         ])
 
       module_id = ctx.course_module.id
@@ -390,7 +390,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           :project,
           :course,
           :course_module,
-          conn: [:user_session]
+          conn: [:instructor_user_session]
         ])
 
       conn =
@@ -416,7 +416,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           :course_lesson
         ])
 
-      ctx2 = ctx |> produce([:user, conn: [:user_session]])
+      ctx2 = ctx |> produce([:user, conn: [:instructor_user_session]])
 
       conn =
         put(ctx2.conn, ~p"/api/instructors/courses/lessons/update", %{
@@ -439,7 +439,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           :course,
           :course_module,
           :course_lesson,
-          conn: [:user_session]
+          conn: [:instructor_user_session]
         ])
 
       conn =
@@ -473,7 +473,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           :course,
           :course_module,
           :course_lesson,
-          conn: [:user_session]
+          conn: [:instructor_user_session]
         ])
 
       conn =
@@ -492,7 +492,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           :instructor,
           :project,
           :course,
-          conn: [:user_session]
+          conn: [:instructor_user_session]
         ])
 
       conn =
@@ -532,7 +532,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           :course
         ])
 
-      ctx2 = ctx |> produce([:user, conn: [:user_session]])
+      ctx2 = ctx |> produce([:user, conn: [:instructor_user_session]])
 
       conn =
         put(ctx2.conn, ~p"/api/instructors/courses/publish", %{
@@ -550,7 +550,7 @@ defmodule BackendWeb.Controllers.InstructorsTest do
           :instructor,
           :project,
           :course,
-          conn: [:user_session]
+          conn: [:instructor_user_session]
         ])
 
       Backend.Instructors.update_course(ctx.course, %{public_path: "course_path"})
@@ -573,7 +573,10 @@ defmodule BackendWeb.Controllers.InstructorsTest do
   end
 
   test "update/delete course lesson video", ctx do
-    ctx = ctx |> exec(:create_course_lesson, type: :video) |> produce(conn: [:user_session])
+    ctx =
+      ctx
+      |> exec(:create_course_lesson, type: :video)
+      |> produce(conn: [:instructor_user_session])
 
     upload_data = %Plug.Upload{
       path: "test/fixtures/dummy.mp4",
@@ -636,7 +639,10 @@ defmodule BackendWeb.Controllers.InstructorsTest do
   end
 
   test "upload wrong format file", ctx do
-    ctx = ctx |> exec(:create_course_lesson, type: :video) |> produce(conn: [:user_session])
+    ctx =
+      ctx
+      |> exec(:create_course_lesson, type: :video)
+      |> produce(conn: [:instructor_user_session])
 
     upload_data = %Plug.Upload{
       path: "test/fixtures/file.css",

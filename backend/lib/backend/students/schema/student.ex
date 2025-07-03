@@ -14,5 +14,6 @@ defmodule Backend.Students.Schema.Student do
     %__MODULE__{}
     |> cast(%{}, [])
     |> put_assoc(:user, user)
+    |> unique_constraint(:user_id)
   end
 end

@@ -1,8 +1,12 @@
 defmodule Backend.Students do
   def create_student(user) do
-    user
-    |> Backend.Students.Schema.Student.create_changeset()
-    |> Backend.Repo.insert()
+    Ecto.Multi.new()
+    |> Ecto.Multi.insert(:create_student, Backend.Students.Schema.Student.create_changeset(user))
+    |> Backend.Repo.transaction()
+    |> case do
+      {:ok, %{create_student: student}} -> {:ok, %{user | student: student}}
+      {:error, _operation, changeset, _changes} -> {:error, changeset}
+    end
   end
 
   def create_student!(user) do

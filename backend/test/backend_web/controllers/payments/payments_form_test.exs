@@ -23,7 +23,7 @@ defmodule BackendWeb.PaymentsTest do
       |> produce([
         :user,
         :student,
-        conn: [:user_session]
+        conn: [:student_user_session]
       ])
 
     conn =

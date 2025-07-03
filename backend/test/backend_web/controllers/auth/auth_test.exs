@@ -5,12 +5,20 @@ defmodule BackendWeb.Controllers.AuthTest do
 
   describe "authentication" do
     test "signs in a user", ctx do
-      ctx = ctx |> produce([:user, conn: [:unauthenticated]])
+      ctx =
+        ctx
+        |> exec(:create_user,
+          email: "myemail@gmail.com",
+          password: "my_password",
+          first_name: "John",
+          last_name: "Doe"
+        )
+        |> produce(conn: [:unauthenticated])
 
       conn =
         post(ctx.conn, @api_auth_login_endpoint, %{
-          "email" => ctx.user.email,
-          "password" => ctx.user.password
+          "email" => "myemail@gmail.com",
+          "password" => "my_password"
         })
 
       assert %{
@@ -40,7 +48,7 @@ defmodule BackendWeb.Controllers.AuthTest do
       conn =
         post(ctx.conn, ~p"/auth/login", %{
           "email" => ctx.user.email,
-          "password" => ctx.user.password <> "wrong"
+          "password" => "wrong_password"
         })
 
       assert %{
@@ -94,7 +102,7 @@ defmodule BackendWeb.Controllers.AuthTest do
       conn =
         post(ctx.conn, @api_auth_register_endpoint, %{
           "email" => ctx.user.email,
-          "password" => ctx.user.password,
+          "password" => "my_new_password",
           "first_name" => Faker.Person.first_name(),
           "last_name" => Faker.Person.last_name()
         })

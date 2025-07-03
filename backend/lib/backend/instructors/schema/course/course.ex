@@ -15,19 +15,20 @@ defmodule Backend.Instructors.Schema.Course do
              :updated_at
            ]}
   schema "courses" do
-    field :name, :string
-    field :description, :string
-    field :status, Backend.Instructors.InstructorProjectStatus
-    field :price, :decimal
-    field :currency, :string
-    field :public_path, :string
+    field(:name, :string)
+    field(:description, :string)
+    field(:status, Backend.Instructors.InstructorProjectStatus)
+    field(:price, :decimal)
+    field(:currency, :string)
+    field(:public_path, :string)
 
-    belongs_to :project, Backend.Instructors.Schema.Project
+    belongs_to(:project, Backend.Instructors.Schema.Project)
 
-    belongs_to :payment_integration, Backend.Instructors.Schema.PaymentIntegration,
+    belongs_to(:payment_integration, Backend.Instructors.Schema.PaymentIntegration,
       foreign_key: :payment_integration_id
+    )
 
-    has_many :modules, Backend.Instructors.Schema.Course.Module, foreign_key: :course_id
+    has_many(:modules, Backend.Instructors.Schema.Course.Module, foreign_key: :course_id)
     timestamps()
   end
 

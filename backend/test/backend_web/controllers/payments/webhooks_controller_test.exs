@@ -47,7 +47,7 @@ defmodule BackendWeb.PaymentsControllerTest do
   describe "liqpay payment" do
     setup ctx do
       ctx
-      |> produce([:student, course: [:published], conn: [:user_session]])
+      |> produce([:student, course: [:published], conn: [:student_user_session]])
       |> exec(:request_course_payment_form)
     end
 

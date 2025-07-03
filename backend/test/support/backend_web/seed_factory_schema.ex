@@ -12,63 +12,72 @@ defmodule BackendWeb.SeedFactorySchema do
     produce(:conn)
   end
 
-  command :create_user_session do
+  command :create_pending_user_session do
     param(:user, entity: :user)
     param(:conn, entity: :conn, with_traits: [:unauthenticated])
 
     resolve(fn args ->
-      {:ok, %{conn: BackendWeb.SessionHelpers.init_user_session(args.conn, args.user)}}
+      {:ok,
+       %{
+         conn:
+           BackendWeb.SessionHelpers.init_user_session(args.conn, args.user, %{
+             session_role: :pending
+           })
+       }}
     end)
 
     update(:conn)
   end
 
-  command :create_pending_role_session do
+  command :create_student_user_session do
     param(:user, entity: :user)
-    param(:conn, entity: :conn, with_traits: [:unauthenticated])
-
-    resolve(fn args ->
-      {:ok, %{conn: BackendWeb.SessionHelpers.init_user_session(args.conn, args.user)}}
-    end)
-
-    update(:conn)
-  end
-
-  command :create_student_session do
     param(:student, entity: :student)
     param(:conn, entity: :conn, with_traits: [:unauthenticated])
 
     resolve(fn args ->
-      {:ok, %{conn: BackendWeb.SessionHelpers.init_user_session(args.conn, args.student)}}
+      {:ok,
+       %{
+         conn:
+           BackendWeb.SessionHelpers.init_user_session(args.conn, args.user, %{
+             session_role: :student
+           })
+       }}
     end)
 
     update(:conn)
   end
 
-  command :create_instructor_session do
+  command :create_instructor_user_session do
+    param(:user, entity: :user)
     param(:instructor, entity: :instructor)
     param(:conn, entity: :conn, with_traits: [:unauthenticated])
 
     resolve(fn args ->
-      {:ok, %{conn: BackendWeb.SessionHelpers.init_user_session(args.conn, args.instructor)}}
+      {:ok,
+       %{
+         conn:
+           BackendWeb.SessionHelpers.init_user_session(args.conn, args.user, %{
+             session_role: :instructor
+           })
+       }}
     end)
 
     update(:conn)
   end
 
-  trait :user_session, :conn do
+  trait :pending_user_session, :conn do
     from(:unauthenticated)
-    exec(:create_user_session)
+    exec(:create_pending_user_session)
   end
 
-  trait :student_session, :conn do
+  trait :student_user_session, :conn do
     from(:unauthenticated)
-    exec(:create_student_session)
+    exec(:create_student_user_session)
   end
 
-  trait :instructor_session, :conn do
+  trait :instructor_user_session, :conn do
     from(:unauthenticated)
-    exec(:create_instructor_session)
+    exec(:create_instructor_user_session)
   end
 
   trait :unauthenticated, :conn do

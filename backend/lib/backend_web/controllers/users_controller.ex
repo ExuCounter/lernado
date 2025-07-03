@@ -15,12 +15,13 @@ defmodule BackendWeb.UsersController do
   end
 
   def update(conn, params) do
-    with {:ok, user} <- Backend.Users.find_by_id(params["user_id"]),
-         :ok <-
-           Bodyguard.permit(Backend.Users, :update_user, conn.assigns.current_user, %{
-             user: user
+    %{current_user: current_user, session_role: session_role} = conn.assigns
+
+    with :ok <-
+           Bodyguard.permit(Backend.Users, :update_user, current_user, %{
+             session_role: session_role
            }),
-         {:ok, user} <- Backend.Users.update_user(user, params) do
+         {:ok, user} <- Backend.Users.update_user(current_user, params) do
       conn
       |> put_status(200)
       |> json(%{

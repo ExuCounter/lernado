@@ -1,13 +1,28 @@
 defmodule Backend.Instructors do
   defdelegate authorize(action, user, params), to: Backend.Instructors.Policy
-  defdelegate authorize(action, user), to: Backend.Instructors.Policy
 
   def create_instructor(user) do
-    user |> Backend.Instructors.Schema.Instructor.create_changeset() |> Backend.Repo.insert()
+    Ecto.Multi.new()
+    |> Ecto.Multi.insert(
+      :create_instructor,
+      Backend.Instructors.Schema.Instructor.create_changeset(user)
+    )
+    |> Backend.Repo.transaction()
+    |> case do
+      {:ok, %{create_instructor: instructor}} ->
+        {:ok, %{user | instructor: instructor}}
+
+      {:error, _operation, changeset, _changes} ->
+        {:error, changeset}
+    end
   end
 
   def create_instructor!(user) do
-    user |> Backend.Instructors.Schema.Instructor.create_changeset() |> Backend.Repo.insert!()
+    with {:ok, instructor} <- create_instructor(user) do
+      {:ok, instructor}
+    else
+      {:error, changeset} -> raise changeset
+    end
   end
 
   def create_project(instructor, attrs) do

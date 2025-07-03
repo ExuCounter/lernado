@@ -21,11 +21,12 @@ defmodule Backend.SeedFactorySchema do
     param(:user, entity: :user)
 
     resolve(fn args ->
-      with {:ok, instructor} <- args.user |> Backend.Instructors.create_instructor() do
-        {:ok, %{instructor: instructor}}
+      with {:ok, user} <- args.user |> Backend.Instructors.create_instructor() do
+        {:ok, %{user: user, instructor: user.instructor}}
       end
     end)
 
+    update(:user)
     produce(:instructor)
   end
 
@@ -179,11 +180,12 @@ defmodule Backend.SeedFactorySchema do
     param(:user, entity: :user)
 
     resolve(fn args ->
-      with {:ok, student} <- args.user |> Backend.Students.create_student() do
-        {:ok, %{student: student}}
+      with {:ok, user} <- args.user |> Backend.Students.create_student() do
+        {:ok, %{user: user, student: user.student}}
       end
     end)
 
+    update(:user)
     produce(:student)
   end
 
